@@ -1,50 +1,69 @@
-﻿@{
+﻿@model List<ECommerceProject.Entity.Concrete.Product>
+
+@{
     ViewData["Title"] = "Home";
+    var products = Model ?? new List<ECommerceProject.Entity.Concrete.Product>();
 }
 
-<div class="text-center mb-5">
-    <h1 class="display-5">E-Commerce Admin Panel</h1>
-    <p>Hızlı erişim menüsü</p>
-</div>
+<div class="container py-4">
 
-<div class="row justify-content-center">
-
-    <div class="col-md-4 mb-3">
-        <div class="card shadow h-100">
-            <div class="card-body text-center d-flex flex-column">
-                <h4>Categories</h4>
-                <p>Kategori işlemleri</p>
-
-                <div class="mt-auto w-100">
-                    <a asp-controller="Category" asp-action="Index" class="btn btn-primary w-100 mb-2">
-                        Listele
-                    </a>
-
-                    <a asp-controller="Category" asp-action="Create" class="btn btn-success w-100">
-                        Yeni Ekle
-                    </a>
-                </div>
-            </div>
-        </div>
+    <div class="text-center mb-4">
+        <h2 class="fw-semibold">Ürünler</h2>
     </div>
 
-    <div class="col-md-4 mb-3">
-        <div class="card shadow h-100">
-            <div class="card-body text-center d-flex flex-column">
-                <h4>Products</h4>
-                <p>Ürün işlemleri</p>
+    <div class="row g-4">
 
-                <div class="mt-auto w-100">
-                    <a asp-controller="Product" asp-action="Index" class="btn btn-primary w-100 mb-2">
-                        Listele
-                    </a>
+        @for (int i = 0; i < 12; i++)
+        {
+            var product = i < products.Count ? products[i] : null;
 
-                    <a asp-controller="Product" asp-action="Create" class="btn btn-success w-100">
-                        Yeni Ekle
+            <div class="col-6 col-md-4 col-lg-3">
+
+                @if (product != null)
+                {
+                    <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id"
+                           class="text-decoration-none text-dark">
+
+                        <div class="card h-100 product-card shadow-sm">
+                            <img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "https://placehold.co/600x400?text=Product" : product.ImageUrl)"
+                                 class="card-img-top" style="height:180px; object-fit:cover;" />
+
+                            <div class="card-body">
+                                <h6 class="card-title">@product.Name</h6>
+                                <p class="fw-bold mb-0">@product.Price.ToString("C")</p>
+                            </div>
+                        </div>
+
                     </a>
-                </div>
+                }
+                else
+                {
+                    <div class="card h-100 empty-card shadow-sm d-flex align-items-center justify-content-center">
+                        <div class="spinner-border text-secondary"></div>
+                    </div>
+                }
+
             </div>
-        </div>
-    </div>
+        }
 
+    </div>
 </div>
+
+<style>
+    .product-card {
+        border-radius: 12px;
+        transition: all 0.2s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1);
+    }
+
+    .empty-card {
+        border-radius: 12px;
+        height: 100%;
+        min-height: 260px;
+        background-color: #f8f9fa;
+    }
+</style>

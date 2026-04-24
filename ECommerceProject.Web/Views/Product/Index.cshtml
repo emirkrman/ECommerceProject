@@ -22,7 +22,17 @@
                 <td>@item.Name</td>
                 <td>@item.Price</td>
                 <td>@item.Stock</td>
-                <td>@item.Category?.Name</td>
+                <td>
+                    @if (item.Category?.ParentCategory != null)
+                    {
+                        @item.Category.ParentCategory.Name
+                        <span>/</span> <strong>@item.Category.Name</strong>
+                    }
+                    else
+                    {
+                        <strong>@item.Category?.Name</strong>
+                    }
+                </td>
                 <td>@item.IsActive</td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edit</a>

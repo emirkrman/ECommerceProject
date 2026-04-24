@@ -1,48 +1,88 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - ECommerceProject.Web</title>
-    <script type="importmap"></script>
+    <title>@ViewData["Title"] - ECommerce</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/ECommerceProject.Web.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" />
 </head>
 
 <body>
+
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <div class="container-fluid">
+        <nav class="navbar navbar-dark bg-dark">
+            <div class="container position-relative">
+
                 <a class="navbar-brand" asp-controller="Home" asp-action="Index">
                     ECommerce
                 </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                <!-- ORTA ARAMA -->
+                <form asp-controller="Product" asp-action="Index" method="get"
+                      class="position-absolute start-50 translate-middle-x w-50">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Ürün ara..." />
+                        <button class="btn btn-light" type="submit">Ara</button>
+                    </div>
+                </form>
 
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Category" asp-action="Index">Categories</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Product" asp-action="Index">Products</a>
-                        </li>
-
-                    </ul>
+                <div>
+                    <a class="btn btn-outline-light btn-sm" asp-controller="Home" asp-action="Admin">
+                        Admin
+                    </a>
                 </div>
+
             </div>
         </nav>
+
+        <!-- KATEGORİ BAR -->
+        <div class="bg-light border-bottom py-2">
+            <div class="container d-flex justify-content-center flex-wrap gap-2">
+
+                @if (ViewBag.NavCategories != null)
+                {
+                    foreach (var category in ViewBag.NavCategories)
+                    {
+                        <div class="dropdown">
+
+                            <a class="btn btn-outline-dark btn-sm dropdown-toggle" asp-controller="Product" asp-action="Index"
+                                   asp-route-categoryId="@category.Id">
+                                @category.Name
+                            </a>
+
+                            @if (category.SubCategories != null && category.SubCategories.Count > 0)
+                            {
+                                <ul class="dropdown-menu">
+                                    @foreach (var sub in category.SubCategories)
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Product" asp-action="Index"
+                                                   asp-route-categoryId="@sub.Id">
+                                                @sub.Name
+                                            </a>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+
+                        </div>
+
+                        <style>
+                                            .dropdown:hover .dropdown-menu {
+                                                display: block;
+                                                margin-top: 0;
+                                            }
+                        </style>
+                    }
+                }
+
+            </div>
+        </div>
     </header>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()

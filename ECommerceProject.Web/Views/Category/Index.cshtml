@@ -9,20 +9,35 @@
         <tr>
             <th>Name</th>
             <th>Description</th>
+            <th>Active</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @foreach (var category in Model.Where(c => c.ParentCategoryId == null))
         {
             <tr>
-                <td>@item.Name</td>
-                <td>@item.Description</td>
+                <td><strong>@category.Name</strong></td>
+                <td>@category.Description</td>
+                <td>@category.IsActive</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Delete</a>
+                    <a asp-action="Edit" asp-route-id="@category.Id" class="btn btn-warning btn-sm">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@category.Id" class="btn btn-danger btn-sm">Delete</a>
                 </td>
             </tr>
+
+            @foreach (var subCategory in Model.Where(c => c.ParentCategoryId == category.Id))
+            {
+                <tr>
+                    <td class="ps-5">↳ @subCategory.Name</td>
+                    <td>@subCategory.Description</td>
+                    <td>@subCategory.IsActive</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@subCategory.Id" class="btn btn-warning btn-sm">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@subCategory.Id" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+            }
         }
     </tbody>
 </table>

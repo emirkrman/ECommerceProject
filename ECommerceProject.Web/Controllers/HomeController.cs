@@ -1,24 +1,27 @@
-using System.Diagnostics;
+using ECommerceProject.Data.Context;
+using ECommerceProject.Web.ViewModels.Home;
 using Microsoft.AspNetCore.Mvc;
-using ECommerceProject.Web.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace ECommerceProject.Web.Controllers;
 
-public class HomeController : Controller
+public class HomeController : BaseController
 {
-    public IActionResult Index()
+    public HomeController(AppDbContext context) : base(context) { }
+
+    public async Task<IActionResult> Index()
     {
-        return View();
+        var products = await _context.Products
+            .Where(p => p.IsActive)
+            .OrderBy(p => Guid.NewGuid())
+            .Take(12)
+            .ToListAsync();
+
+        return View(products);
     }
 
-    public IActionResult Privacy()
+    public IActionResult Admin()
     {
         return View();
-    }
-
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 }

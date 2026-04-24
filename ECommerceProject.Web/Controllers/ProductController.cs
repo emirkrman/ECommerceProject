@@ -6,19 +6,15 @@ using ECommerceProject.Entity.Concrete;
 
 namespace ECommerceProject.Web.Controllers;
 
-public class ProductController : Controller
+public class ProductController : BaseController
 {
-    private readonly AppDbContext _context;
-
-    public ProductController(AppDbContext context)
-    {
-        _context = context;
-    }
+    public ProductController(AppDbContext context) : base(context) { }
 
     public async Task<IActionResult> Index()
     {
         var products = await _context.Products
             .Include(p => p.Category)
+            .ThenInclude(c => c.ParentCategory)
             .ToListAsync();
 
         return View(products);

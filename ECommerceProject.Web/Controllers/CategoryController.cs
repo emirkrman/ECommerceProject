@@ -1,18 +1,14 @@
 using ECommerceProject.Data.Context;
 using ECommerceProject.Entity.Concrete;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace ECommerceProject.Web.Controllers;
 
-public class CategoryController : Controller
+public class CategoryController : BaseController
 {
-    private readonly AppDbContext _context;
-
-    public CategoryController(AppDbContext context)
-    {
-        _context = context;
-    }
+    public CategoryController(AppDbContext context) : base(context) { }
 
     // LIST
     public async Task<IActionResult> Index()
@@ -21,8 +17,16 @@ public class CategoryController : Controller
         return View(categories);
     }
 
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
+        ViewBag.ParentCategories = new SelectList(
+            await _context.Categories
+                .Where(c => c.ParentCategoryId == null)
+                .ToListAsync(),
+            "Id",
+            "Name"
+        );
+
         return View();
     }
 
