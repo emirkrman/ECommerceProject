@@ -41,7 +41,6 @@ public class CategoryController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // EDIT - GET
     public async Task<IActionResult> Edit(int id)
     {
         var category = await _context.Categories.FindAsync(id);
@@ -51,7 +50,6 @@ public class CategoryController : Controller
         return View(category);
     }
 
-    // EDIT - POST
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, Category model)
@@ -76,7 +74,6 @@ public class CategoryController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // DELETE - GET
     public async Task<IActionResult> Delete(int id)
     {
         var category = await _context.Categories.FindAsync(id);
