@@ -1,0 +1,17 @@
+@model ECommerceProject.Entity.Concrete.Category
+
+<h2>Delete Category</h2>
+
+<div class="alert alert-danger">
+    Bu kategoriyi silmek istediğine emin misin?
+</div>
+
+<p><strong>Name:</strong> @Model.Name</p>
+<p><strong>Description:</strong> @Model.Description</p>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
