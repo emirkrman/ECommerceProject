@@ -141,6 +141,19 @@ public class ProductController : BaseController
         return View(product);
     }
 
+    public async Task<IActionResult> Details(int id)
+    {
+        var product = await _context.Products
+            .Include(p => p.Category)
+            .ThenInclude(c => c.ParentCategory)
+            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+
+        if (product == null)
+            return NotFound();
+
+        return View(product);
+    }
+
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)

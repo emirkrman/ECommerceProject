@@ -1,0 +1,52 @@
+@model ECommerceProject.Entity.Concrete.Product
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="container py-4">
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <img src="@(string.IsNullOrWhiteSpace(Model.ImageUrl) ? "https://placehold.co/800x600?text=Product" : Model.ImageUrl)"
+                         alt="@Model.Name"
+                         class="img-fluid rounded" />
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small mb-2">
+                        @if (Model.Category?.ParentCategory != null)
+                        {
+                            <span>@Model.Category.ParentCategory.Name / @Model.Category.Name</span>
+                        }
+                        else
+                        {
+                            <span>@Model.Category?.Name</span>
+                        }
+                    </div>
+
+                    <h1 class="h3 mb-3">@Model.Name</h1>
+                    <div class="h4 fw-bold mb-3">@Model.Price.ToString("C")</div>
+                    <div class="mb-3">
+                        <span class="badge text-bg-dark">Stock: @Model.Stock</span>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Description))
+                    {
+                        <p class="text-muted mb-4">@Model.Description</p>
+                    }
+
+                    <div class="d-flex gap-2">
+                        <a asp-action="List" asp-route-categoryId="@Model.CategoryId" class="btn btn-outline-dark">Back to Products</a>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-dark">Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

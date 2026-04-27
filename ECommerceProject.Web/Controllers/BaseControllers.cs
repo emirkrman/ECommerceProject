@@ -1,6 +1,9 @@
 using ECommerceProject.Data.Context;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
+
+namespace ECommerceProject.Web.Controllers;
 
 public class BaseController : Controller
 {
@@ -11,15 +14,15 @@ public class BaseController : Controller
         _context = context;
     }
 
-    public override void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context)
+    public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        var categories = _context.Categories
+        var categories = await _context.Categories
             .Include(c => c.SubCategories)
             .Where(c => c.IsActive && c.ParentCategoryId == null)
-            .ToList();
+            .ToListAsync();
 
         ViewBag.NavCategories = categories;
 
-        base.OnActionExecuting(context);
+        await next();
     }
 }

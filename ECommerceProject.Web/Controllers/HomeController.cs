@@ -1,5 +1,4 @@
 using ECommerceProject.Data.Context;
-using ECommerceProject.Web.ViewModels.Home;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
