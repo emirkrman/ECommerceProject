@@ -16,12 +16,33 @@ public class ProductController : BaseController
         return Random.Shared.Next(35, 51) / 10m;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? sort = null)
     {
-        var products = await _context.Products
+        var query = _context.Products
             .Include(p => p.Category)
             .ThenInclude(c => c.ParentCategory)
-            .ToListAsync();
+            .AsQueryable();
+
+        query = sort switch
+        {
+            "name_asc" => query.OrderBy(p => p.Name),
+            "name_desc" => query.OrderByDescending(p => p.Name),
+            "price_asc" => query.OrderBy(p => p.Price),
+            "price_desc" => query.OrderByDescending(p => p.Price),
+            "stock_asc" => query.OrderBy(p => p.Stock),
+            "stock_desc" => query.OrderByDescending(p => p.Stock),
+            "rating_asc" => query.OrderBy(p => p.Rating).ThenBy(p => p.Id),
+            "rating_desc" => query.OrderByDescending(p => p.Rating).ThenByDescending(p => p.Id),
+            "category_asc" => query.OrderBy(p => p.Category != null ? p.Category.Name : string.Empty),
+            "category_desc" => query.OrderByDescending(p => p.Category != null ? p.Category.Name : string.Empty),
+            "active_asc" => query.OrderBy(p => p.IsActive),
+            "active_desc" => query.OrderByDescending(p => p.IsActive),
+            _ => query.OrderByDescending(p => p.Id)
+        };
+
+        ViewBag.CurrentSort = sort;
+
+        var products = await query.ToListAsync();
 
         return View(products);
     }
@@ -175,7 +196,7 @@ public class ProductController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
-    public async Task<IActionResult> List(int? categoryId, string? search, int page = 1)
+    public async Task<IActionResult> List(int? categoryId, string? search, string? sort = null, int page = 1)
     {
         int pageSize = 8;
 
@@ -204,10 +225,20 @@ public class ProductController : BaseController
                 (p.Description != null && p.Description.Contains(search)));
         }
 
+        query = sort switch
+        {
+            "newest" => query.OrderByDescending(p => p.CreatedDate),
+            "price_asc" => query.OrderBy(p => p.Price),
+            "price_desc" => query.OrderByDescending(p => p.Price),
+            "name_asc" => query.OrderBy(p => p.Name),
+            "name_desc" => query.OrderByDescending(p => p.Name),
+            "rating_desc" => query.OrderByDescending(p => p.Rating).ThenByDescending(p => p.Id),
+            _ => query.OrderByDescending(p => p.Id)
+        };
+
         var totalProducts = await query.CountAsync();
 
         var products = await query
-            .OrderBy(p => p.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -223,6 +254,7 @@ public class ProductController : BaseController
             Categories = categories,
             CategoryId = categoryId,
             Search = search,
+            Sort = sort,
             CurrentPage = page,
             TotalPages = (int)Math.Ceiling(totalProducts / (double)pageSize)
         };

@@ -4,14 +4,45 @@
 
 <a asp-action="Create" class="btn btn-success mb-2">New Product</a>
 
-<table class="table">
+<table class="table admin-products-table" id="productsTable">
     <thead>
         <tr>
-            <th>Name</th>
-            <th>Price</th>
-            <th>Stock</th>
-            <th>Category</th>
-            <th>Active</th>
+            <th>
+                <button type="button" class="sort-button" data-sort-key="name" data-sort-type="text">
+                    <span>Name</span>
+                    <span class="sort-indicator"></span>
+                </button>
+            </th>
+            <th>
+                <button type="button" class="sort-button" data-sort-key="price" data-sort-type="number">
+                    <span>Price</span>
+                    <span class="sort-indicator"></span>
+                </button>
+            </th>
+            <th>
+                <button type="button" class="sort-button" data-sort-key="stock" data-sort-type="number">
+                    <span>Stock</span>
+                    <span class="sort-indicator"></span>
+                </button>
+            </th>
+            <th>
+                <button type="button" class="sort-button" data-sort-key="rating" data-sort-type="number">
+                    <span>Rating</span>
+                    <span class="sort-indicator"></span>
+                </button>
+            </th>
+            <th>
+                <button type="button" class="sort-button" data-sort-key="category" data-sort-type="text">
+                    <span>Category</span>
+                    <span class="sort-indicator"></span>
+                </button>
+            </th>
+            <th>
+                <button type="button" class="sort-button" data-sort-key="active" data-sort-type="text">
+                    <span>Active</span>
+                    <span class="sort-indicator"></span>
+                </button>
+            </th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -20,12 +51,17 @@
         {
             var category = item.Category;
             var parentCategory = category?.ParentCategory;
+            var categoryText = parentCategory != null && category != null
+                ? $"{parentCategory.Name} / {category.Name}"
+                : category?.Name ?? string.Empty;
+            var ratingText = item.Rating.HasValue ? item.Rating.Value.ToString("0.0") : "-";
 
             <tr>
-                <td>@item.Name</td>
-                <td>@item.Price</td>
-                <td>@item.Stock</td>
-                <td>
+                <td data-sort-value="@item.Name">@item.Name</td>
+                <td data-sort-value="@item.Price">@item.Price</td>
+                <td data-sort-value="@item.Stock">@item.Stock</td>
+                <td data-sort-value="@(item.Rating ?? -1)">@ratingText</td>
+                <td data-sort-value="@categoryText">
                     @if (parentCategory != null && category != null)
                     {
                         @parentCategory.Name
@@ -36,7 +72,7 @@
                         <strong>@category?.Name</strong>
                     }
                 </td>
-                <td>@item.IsActive</td>
+                <td data-sort-value="@item.IsActive">@item.IsActive</td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edit</a>
                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Delete</a>
@@ -45,3 +81,97 @@
         }
     </tbody>
 </table>
+
+<style>
+    .admin-products-table {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    .sort-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        width: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #212529;
+        font: inherit;
+        font-weight: 600;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .sort-indicator {
+        display: inline-block;
+        width: 0.9rem;
+        text-align: center;
+    }
+</style>
+
+<script>
+    (() => {
+        const table = document.getElementById("productsTable");
+        if (!table) return;
+
+        const tbody = table.querySelector("tbody");
+        const buttons = table.querySelectorAll(".sort-button");
+        let currentSortKey = null;
+        let currentDirection = "asc";
+
+        const parseValue = (value, type) => {
+            if (type === "number") {
+                const parsed = Number.parseFloat(value);
+                return Number.isNaN(parsed) ? -1 : parsed;
+            }
+
+            if (value === "True") return 1;
+            if (value === "False") return 0;
+
+            return value.toString().toLocaleLowerCase("tr");
+        };
+
+        const updateIndicators = () => {
+            buttons.forEach((button) => {
+                const indicator = button.querySelector(".sort-indicator");
+                if (!indicator) return;
+
+                if (button.dataset.sortKey !== currentSortKey) {
+                    indicator.textContent = "";
+                    return;
+                }
+
+                indicator.textContent = currentDirection === "asc" ? "↑" : "↓";
+            });
+        };
+
+        buttons.forEach((button, columnIndex) => {
+            button.addEventListener("click", () => {
+                const { sortKey, sortType } = button.dataset;
+                const rows = Array.from(tbody.querySelectorAll("tr"));
+
+                if (currentSortKey === sortKey) {
+                    currentDirection = currentDirection === "asc" ? "desc" : "asc";
+                } else {
+                    currentSortKey = sortKey;
+                    currentDirection = "asc";
+                }
+
+                rows.sort((rowA, rowB) => {
+                    const cellA = rowA.children[columnIndex];
+                    const cellB = rowB.children[columnIndex];
+                    const valueA = parseValue(cellA.dataset.sortValue ?? cellA.textContent?.trim() ?? "", sortType);
+                    const valueB = parseValue(cellB.dataset.sortValue ?? cellB.textContent?.trim() ?? "", sortType);
+
+                    if (valueA < valueB) return currentDirection === "asc" ? -1 : 1;
+                    if (valueA > valueB) return currentDirection === "asc" ? 1 : -1;
+                    return 0;
+                });
+
+                tbody.replaceChildren(...rows);
+                updateIndicators();
+            });
+        });
+    })();
+</script>
