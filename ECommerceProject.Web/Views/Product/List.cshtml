@@ -38,7 +38,7 @@
                                     @category.Name
                                 </a>
 
-                                @if (category.SubCategories.Any())
+                                @if (category.SubCategories?.Any() == true)
                                 {
                                     <div class="ms-3 mt-2">
                                         @foreach (var sub in category.SubCategories)

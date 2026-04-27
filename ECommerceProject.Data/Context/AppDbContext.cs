@@ -20,6 +20,10 @@ public class AppDbContext : DbContext
             .Property(p => p.Price)
             .HasPrecision(18, 2);
 
+        modelBuilder.Entity<Product>()
+            .Property(p => p.Rating)
+            .HasPrecision(2, 1);
+
         modelBuilder.Entity<Category>()
             .HasOne(c => c.ParentCategory)
             .WithMany(c => c.SubCategories)

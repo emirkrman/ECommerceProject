@@ -16,6 +16,8 @@ public class Product : BaseEntity
 
     public bool IsActive { get; set; } = true;
 
+    public decimal? Rating { get; set; }
+
     public int CategoryId { get; set; }
 
     public Category? Category { get; set; }

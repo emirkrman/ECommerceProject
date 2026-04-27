@@ -11,6 +11,11 @@ public class ProductController : BaseController
 {
     public ProductController(AppDbContext context) : base(context) { }
 
+    private static decimal GenerateInitialRating()
+    {
+        return Random.Shared.Next(35, 51) / 10m;
+    }
+
     public async Task<IActionResult> Index()
     {
         var products = await _context.Products
@@ -59,6 +64,7 @@ public class ProductController : BaseController
         }
 
         model.CreatedDate = DateTime.UtcNow;
+        model.Rating = GenerateInitialRating();
 
         _context.Products.Add(model);
         await _context.SaveChangesAsync();
