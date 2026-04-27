@@ -1,11 +1,14 @@
 using ECommerceProject.Data.Context;
+using ECommerceProject.Entity.Common;
 using ECommerceProject.Entity.Concrete;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace ECommerceProject.Web.Controllers;
 
+[Authorize(Roles = AppRoles.Admin)]
 public class CategoryController : BaseController
 {
     public CategoryController(AppDbContext context) : base(context) { }

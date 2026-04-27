@@ -1,4 +1,6 @@
 using ECommerceProject.Data.Context;
+using ECommerceProject.Entity.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +21,7 @@ public class HomeController : BaseController
         return View(products);
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     public IActionResult Admin()
     {
         return View();

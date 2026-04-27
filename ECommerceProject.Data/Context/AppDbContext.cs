@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<AppUser> Users => Set<AppUser>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,5 +30,25 @@ public class AppDbContext : DbContext
             .WithMany(c => c.SubCategories)
             .HasForeignKey(c => c.ParentCategoryId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<AppUser>()
+            .Property(u => u.FullName)
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<AppUser>()
+            .Property(u => u.Email)
+            .HasMaxLength(150);
+
+        modelBuilder.Entity<AppUser>()
+            .Property(u => u.PasswordHash)
+            .HasMaxLength(500);
+
+        modelBuilder.Entity<AppUser>()
+            .Property(u => u.Role)
+            .HasMaxLength(30);
+
+        modelBuilder.Entity<AppUser>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
     }
 }

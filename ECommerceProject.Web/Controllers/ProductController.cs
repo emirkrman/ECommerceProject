@@ -1,26 +1,44 @@
 using ECommerceProject.Data.Context;
+using ECommerceProject.Entity.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ECommerceProject.Entity.Concrete;
 using ECommerceProject.Web.ViewModels.Products;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authorization;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Processing;
 
 namespace ECommerceProject.Web.Controllers;
 
 public class ProductController : BaseController
 {
-    public ProductController(AppDbContext context) : base(context) { }
+    private static readonly string[] AllowedImageExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+    private static readonly string[] AllowedImageContentTypes = ["image/jpeg", "image/png", "image/webp"];
+    private const long MaxImageSizeBytes = 2 * 1024 * 1024;
+    private const int MaxImageWidth = 1200;
+    private const int MaxImageHeight = 1200;
+    private const int WebpQuality = 80;
+    private readonly IWebHostEnvironment _environment;
+
+    public ProductController(AppDbContext context, IWebHostEnvironment environment) : base(context)
+    {
+        _environment = environment;
+    }
 
     private static decimal GenerateInitialRating()
     {
         return Random.Shared.Next(35, 51) / 10m;
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Index(string? sort = null)
     {
         var query = _context.Products
             .Include(p => p.Category)
-            .ThenInclude(c => c.ParentCategory)
+            .ThenInclude(c => c!.ParentCategory)
             .AsQueryable();
 
         query = sort switch
@@ -47,6 +65,7 @@ public class ProductController : BaseController
         return View(products);
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Create()
     {
         ViewBag.Categories = new SelectList(
@@ -60,7 +79,8 @@ public class ProductController : BaseController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Product model)
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> Create(ProductFormViewModel model)
     {
         var categories = await _context.Categories
             .Where(c => c.IsActive)
@@ -71,6 +91,8 @@ public class ProductController : BaseController
             TempData["Error"] = "Ürün eklemeden önce kategori oluşturmalısınız.";
             return RedirectToAction("Create", "Category");
         }
+
+        ValidateImage(model.ImageFile);
 
         if (!ModelState.IsValid)
         {
@@ -84,15 +106,28 @@ public class ProductController : BaseController
             return View(model);
         }
 
-        model.CreatedDate = DateTime.UtcNow;
-        model.Rating = GenerateInitialRating();
+        var imageUrl = await SaveImageAsync(model.ImageFile);
 
-        _context.Products.Add(model);
+        var entity = new Product
+        {
+            Name = model.Name,
+            Description = model.Description,
+            Price = model.Price,
+            Stock = model.Stock,
+            ImageUrl = imageUrl,
+            CategoryId = model.CategoryId,
+            IsActive = model.IsActive,
+            CreatedDate = DateTime.UtcNow,
+            Rating = GenerateInitialRating()
+        };
+
+        _context.Products.Add(entity);
         await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Edit(int id)
     {
         var product = await _context.Products.FindAsync(id);
@@ -106,12 +141,23 @@ public class ProductController : BaseController
             product.CategoryId
         );
 
-        return View(product);
+        return View(new ProductFormViewModel
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Description = product.Description,
+            Price = product.Price,
+            Stock = product.Stock,
+            ExistingImageUrl = product.ImageUrl,
+            CategoryId = product.CategoryId,
+            IsActive = product.IsActive
+        });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, Product model)
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> Edit(int id, ProductFormViewModel model)
     {
         if (id != model.Id)
             return NotFound();
@@ -125,6 +171,8 @@ public class ProductController : BaseController
             TempData["Error"] = "Önce kategori oluşturmalısınız.";
             return RedirectToAction("Create", "Category");
         }
+
+        ValidateImage(model.ImageFile);
 
         if (!ModelState.IsValid)
         {
@@ -146,16 +194,22 @@ public class ProductController : BaseController
         entity.Description = model.Description;
         entity.Price = model.Price;
         entity.Stock = model.Stock;
-        entity.ImageUrl = model.ImageUrl;
         entity.IsActive = model.IsActive;
         entity.CategoryId = model.CategoryId;
         entity.UpdatedDate = DateTime.UtcNow;
+
+        if (model.ImageFile != null)
+        {
+            DeleteImage(entity.ImageUrl);
+            entity.ImageUrl = await SaveImageAsync(model.ImageFile);
+        }
 
         await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Delete(int id)
     {
         var product = await _context.Products
@@ -172,7 +226,7 @@ public class ProductController : BaseController
     {
         var product = await _context.Products
             .Include(p => p.Category)
-            .ThenInclude(c => c.ParentCategory)
+            .ThenInclude(c => c!.ParentCategory)
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
 
         if (product == null)
@@ -183,6 +237,7 @@ public class ProductController : BaseController
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var product = await _context.Products.FindAsync(id);
@@ -190,6 +245,7 @@ public class ProductController : BaseController
         if (product == null)
             return NotFound();
 
+        DeleteImage(product.ImageUrl);
         _context.Products.Remove(product);
         await _context.SaveChangesAsync();
 
@@ -202,7 +258,7 @@ public class ProductController : BaseController
 
         var query = _context.Products
             .Include(p => p.Category)
-                .ThenInclude(c => c.ParentCategory)
+                .ThenInclude(c => c!.ParentCategory)
             .Where(p => p.IsActive)
             .AsQueryable();
 
@@ -260,5 +316,72 @@ public class ProductController : BaseController
         };
 
         return View(model);
+    }
+
+    private void ValidateImage(IFormFile? imageFile)
+    {
+        if (imageFile == null || imageFile.Length == 0)
+            return;
+
+        var extension = Path.GetExtension(imageFile.FileName);
+        if (string.IsNullOrWhiteSpace(extension) ||
+            !AllowedImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError(nameof(ProductFormViewModel.ImageFile), "Lutfen JPG, PNG veya WEBP formatinda bir gorsel secin.");
+        }
+
+        if (!AllowedImageContentTypes.Contains(imageFile.ContentType, StringComparer.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError(nameof(ProductFormViewModel.ImageFile), "Yuklenen dosya gecerli bir gorsel olmali.");
+        }
+
+        if (imageFile.Length > MaxImageSizeBytes)
+        {
+            ModelState.AddModelError(nameof(ProductFormViewModel.ImageFile), "Gorsel boyutu 2 MB'dan buyuk olamaz.");
+        }
+    }
+
+    private async Task<string?> SaveImageAsync(IFormFile? imageFile)
+    {
+        if (imageFile == null || imageFile.Length == 0)
+            return null;
+
+        var uploadsRoot = Path.Combine(_environment.WebRootPath, "uploads", "products");
+        Directory.CreateDirectory(uploadsRoot);
+
+        var fileName = $"{Guid.NewGuid():N}.webp";
+        var filePath = Path.Combine(uploadsRoot, fileName);
+
+        await using var inputStream = imageFile.OpenReadStream();
+        using var image = await Image.LoadAsync(inputStream);
+
+        image.Mutate(x => x.Resize(new ResizeOptions
+        {
+            Mode = ResizeMode.Max,
+            Size = new Size(MaxImageWidth, MaxImageHeight)
+        }));
+
+        await using var outputStream = new FileStream(filePath, FileMode.Create);
+        await image.SaveAsync(outputStream, new WebpEncoder
+        {
+            Quality = WebpQuality
+        });
+
+        return $"/uploads/products/{fileName}";
+    }
+
+    private void DeleteImage(string? imageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrl) || !imageUrl.StartsWith("/uploads/products/", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        var relativePath = imageUrl.TrimStart('/')
+            .Replace('/', Path.DirectorySeparatorChar);
+        var fullPath = Path.Combine(_environment.WebRootPath, relativePath);
+
+        if (System.IO.File.Exists(fullPath))
+        {
+            System.IO.File.Delete(fullPath);
+        }
     }
 }
