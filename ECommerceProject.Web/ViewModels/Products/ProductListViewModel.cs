@@ -12,6 +12,8 @@ public class ProductListViewModel
 
     public string? Search { get; set; }
 
+    public string? Sort { get; set; }
+
     public int CurrentPage { get; set; }
 
     public int TotalPages { get; set; }

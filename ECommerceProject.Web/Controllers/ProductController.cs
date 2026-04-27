@@ -175,7 +175,7 @@ public class ProductController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
-    public async Task<IActionResult> List(int? categoryId, string? search, int page = 1)
+    public async Task<IActionResult> List(int? categoryId, string? search, string? sort = null, int page = 1)
     {
         int pageSize = 8;
 
@@ -204,10 +204,20 @@ public class ProductController : BaseController
                 (p.Description != null && p.Description.Contains(search)));
         }
 
+        query = sort switch
+        {
+            "newest" => query.OrderByDescending(p => p.CreatedDate),
+            "price_asc" => query.OrderBy(p => p.Price),
+            "price_desc" => query.OrderByDescending(p => p.Price),
+            "name_asc" => query.OrderBy(p => p.Name),
+            "name_desc" => query.OrderByDescending(p => p.Name),
+            "rating_desc" => query.OrderByDescending(p => p.Rating).ThenByDescending(p => p.Id),
+            _ => query.OrderByDescending(p => p.Id)
+        };
+
         var totalProducts = await query.CountAsync();
 
         var products = await query
-            .OrderBy(p => p.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -223,6 +233,7 @@ public class ProductController : BaseController
             Categories = categories,
             CategoryId = categoryId,
             Search = search,
+            Sort = sort,
             CurrentPage = page,
             TotalPages = (int)Math.Ceiling(totalProducts / (double)pageSize)
         };
