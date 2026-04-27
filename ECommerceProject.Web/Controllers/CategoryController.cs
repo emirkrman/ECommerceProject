@@ -13,7 +13,6 @@ public class CategoryController : BaseController
 {
     public CategoryController(AppDbContext context) : base(context) { }
 
-    // LIST
     public async Task<IActionResult> Index()
     {
         var categories = await _context.Categories.ToListAsync();

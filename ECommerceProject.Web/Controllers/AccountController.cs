@@ -24,7 +24,7 @@ public class AccountController : BaseController
     [AllowAnonymous]
     public IActionResult Register()
     {
-        if (User.Identity?.IsAuthenticated == true)
+        if (IsAuthenticated())
             return RedirectToAction("Index", "Home");
 
         return View();
@@ -35,7 +35,7 @@ public class AccountController : BaseController
     [AllowAnonymous]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
-        if (User.Identity?.IsAuthenticated == true)
+        if (IsAuthenticated())
             return RedirectToAction("Index", "Home");
 
         if (!ModelState.IsValid)
@@ -72,7 +72,7 @@ public class AccountController : BaseController
     [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
     {
-        if (User.Identity?.IsAuthenticated == true)
+        if (IsAuthenticated())
             return RedirectToAction("Index", "Home");
 
         ViewBag.ReturnUrl = returnUrl;
@@ -84,7 +84,7 @@ public class AccountController : BaseController
     [AllowAnonymous]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
-        if (User.Identity?.IsAuthenticated == true)
+        if (IsAuthenticated())
             return RedirectToAction("Index", "Home");
 
         ViewBag.ReturnUrl = returnUrl;
@@ -158,5 +158,10 @@ public class AccountController : BaseController
     private static string NormalizeEmail(string email)
     {
         return email.Trim().ToLowerInvariant();
+    }
+
+    private bool IsAuthenticated()
+    {
+        return User.Identity?.IsAuthenticated == true;
     }
 }
