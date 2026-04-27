@@ -5,6 +5,8 @@
 
 # dotenv files
 .env
+.dotnet/
+.home/
 
 # User-specific files
 *.rsuser
