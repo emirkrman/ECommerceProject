@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ECommerceProject.Entity.Concrete;
+using ECommerceProject.Web.ViewModels.Products;
 
 namespace ECommerceProject.Web.Controllers;
 
@@ -153,5 +154,60 @@ public class ProductController : BaseController
         await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
+    }
+
+    public async Task<IActionResult> List(int? categoryId, string? search, int page = 1)
+    {
+        int pageSize = 8;
+
+        var query = _context.Products
+            .Include(p => p.Category)
+                .ThenInclude(c => c.ParentCategory)
+            .Where(p => p.IsActive)
+            .AsQueryable();
+
+        if (categoryId.HasValue)
+        {
+            var subCategoryIds = await _context.Categories
+                .Where(c => c.ParentCategoryId == categoryId.Value)
+                .Select(c => c.Id)
+                .ToListAsync();
+
+            subCategoryIds.Add(categoryId.Value);
+
+            query = query.Where(p => subCategoryIds.Contains(p.CategoryId));
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(p =>
+                p.Name.Contains(search) ||
+                (p.Description != null && p.Description.Contains(search)));
+        }
+
+        var totalProducts = await query.CountAsync();
+
+        var products = await query
+            .OrderBy(p => p.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var categories = await _context.Categories
+            .Include(c => c.SubCategories)
+            .Where(c => c.IsActive && c.ParentCategoryId == null)
+            .ToListAsync();
+
+        var model = new ProductListViewModel
+        {
+            ListedProducts = products,
+            Categories = categories,
+            CategoryId = categoryId,
+            Search = search,
+            CurrentPage = page,
+            TotalPages = (int)Math.Ceiling(totalProducts / (double)pageSize)
+        };
+
+        return View(model);
     }
 }

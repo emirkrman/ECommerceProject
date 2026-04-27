@@ -1,0 +1,161 @@
+@model ECommerceProject.Web.ViewModels.Products.ProductListViewModel
+
+@{
+    ViewData["Title"] = "Products";
+}
+
+<div class="container py-4">
+    <div class="row g-4">
+        <div class="col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="mb-3">Filtreler</h5>
+
+                    <form asp-action="List" method="get" class="mb-4">
+                        <input type="hidden" name="categoryId" value="@Model.CategoryId" />
+
+                        <label for="searchBox" class="form-label small text-muted">Ürün Ara</label>
+                        <div class="d-grid gap-2">
+                            <input id="searchBox" type="text" name="search" value="@Model.Search" class="form-control"
+                                   placeholder="Ürün ara..." />
+                            <button class="btn btn-dark" type="submit">Ara</button>
+                        </div>
+                    </form>
+
+                    <div>
+                        <div class="small text-muted mb-2">Kategoriler</div>
+
+                        <a asp-action="List" asp-route-search="@Model.Search"
+                               class="filter-link @(Model.CategoryId == null ? "active" : "")">
+                            Tüm Ürünler
+                        </a>
+
+                        @foreach (var category in Model.Categories)
+                        {
+                            <div class="mb-2">
+                                <a asp-action="List" asp-route-categoryId="@category.Id" asp-route-search="@Model.Search"
+                                       class="filter-link fw-semibold @(Model.CategoryId == category.Id ? "active" : "")">
+                                    @category.Name
+                                </a>
+
+                                @if (category.SubCategories.Any())
+                                {
+                                    <div class="ms-3 mt-2">
+                                        @foreach (var sub in category.SubCategories)
+                                        {
+                                            <a asp-action="List" asp-route-categoryId="@sub.Id" asp-route-search="@Model.Search"
+                                                   class="filter-link small @(Model.CategoryId == sub.Id ? "active" : "")">
+                                                @sub.Name
+                                            </a>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h4 class="mb-1">Ürünler</h4>
+                    <p class="text-muted mb-0 small">
+                        @if (!string.IsNullOrWhiteSpace(Model.Search))
+                        {
+                            <span>"@Model.Search" için sonuçlar</span>
+                        }
+                        else if (Model.CategoryId.HasValue)
+                        {
+                            <span>Seçilen kategoriye ait ürünler</span>
+                        }
+                        else
+                        {
+                            <span>Tüm aktif ürünler</span>
+                        }
+                    </p>
+                </div>
+            </div>
+
+            @if (Model.ListedProducts.Any())
+            {
+                <div class="row g-4">
+                    @foreach (var product in Model.ListedProducts)
+                    {
+                        <div class="col-6 col-md-4 col-xl-3">
+                            <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id"
+                                   class="text-decoration-none text-dark">
+                                <div class="card h-100 border-0 shadow-sm product-card">
+                                    <img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "https://placehold.co/600x400?text=Product" : product.ImageUrl)"
+                                         class="card-img-top" style="height: 190px; object-fit: cover;" />
+
+                                    <div class="card-body">
+                                        <div class="text-muted small mb-1">@product.Category?.Name</div>
+                                        <h6 class="mb-2">@product.Name</h6>
+                                        <div class="fw-semibold">@product.Price.ToString("C")</div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <h5>Sonuç bulunamadı</h5>
+                        <p class="text-muted mb-0">Arama veya kategori filtresini değiştirip tekrar deneyin.</p>
+                    </div>
+                </div>
+            }
+
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" asp-action="List" asp-route-page="@i"
+                                       asp-route-categoryId="@Model.CategoryId" asp-route-search="@Model.Search">
+                                    @i
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .filter-link {
+        display: block;
+        padding: 0.45rem 0.65rem;
+        border-radius: 0.5rem;
+        color: #212529;
+        text-decoration: none;
+        transition: background-color 0.15s ease;
+    }
+
+    .filter-link:hover {
+        background-color: #f8f9fa;
+        color: #212529;
+    }
+
+    .filter-link.active {
+        background-color: #212529;
+        color: #fff;
+    }
+
+    .product-card {
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-4px);
+    }
+</style>

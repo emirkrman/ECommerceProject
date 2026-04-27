@@ -21,7 +21,7 @@
                 </a>
 
                 <!-- ORTA ARAMA -->
-                <form asp-controller="Product" asp-action="Index" method="get"
+                <form asp-controller="Product" asp-action="List" method="get"
                       class="position-absolute start-50 translate-middle-x w-50">
                     <div class="input-group">
                         <input type="text" name="search" class="form-control" placeholder="Ürün ara..." />
@@ -48,7 +48,7 @@
                     {
                         <div class="dropdown">
 
-                            <a class="btn btn-outline-dark btn-sm dropdown-toggle" asp-controller="Product" asp-action="Index"
+                            <a class="btn btn-outline-dark btn-sm dropdown-toggle" asp-controller="Product" asp-action="List"
                                    asp-route-categoryId="@category.Id">
                                 @category.Name
                             </a>
@@ -59,7 +59,7 @@
                                     @foreach (var sub in category.SubCategories)
                                     {
                                         <li>
-                                            <a class="dropdown-item" asp-controller="Product" asp-action="Index"
+                                            <a class="dropdown-item" asp-controller="Product" asp-action="List"
                                                    asp-route-categoryId="@sub.Id">
                                                 @sub.Name
                                             </a>
