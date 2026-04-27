@@ -8,6 +8,7 @@
 .dotnet/
 .home/
 .artifacts/
+ECommerceProject.Web/appsettings.Local.json
 
 # User-specific files
 *.rsuser

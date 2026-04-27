@@ -22,23 +22,42 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 
         while (currentDirectory != null)
         {
-            var appSettingsPath = Path.Combine(currentDirectory.FullName, "ECommerceProject.Web", "appsettings.json");
-            if (File.Exists(appSettingsPath))
-            {
-                using var stream = File.OpenRead(appSettingsPath);
-                using var document = JsonDocument.Parse(stream);
+            var webProjectPath = Path.Combine(currentDirectory.FullName, "ECommerceProject.Web");
+            var localSettingsPath = Path.Combine(webProjectPath, "appsettings.Local.json");
+            var defaultSettingsPath = Path.Combine(webProjectPath, "appsettings.json");
 
-                if (document.RootElement.TryGetProperty("ConnectionStrings", out var connectionStrings) &&
-                    connectionStrings.TryGetProperty("DefaultConnection", out var defaultConnection))
-                {
-                    return defaultConnection.GetString()
-                        ?? throw new InvalidOperationException("DefaultConnection bos olamaz.");
-                }
+            if (File.Exists(localSettingsPath))
+            {
+                var localConnectionString = ReadConnectionString(localSettingsPath);
+                if (!string.IsNullOrWhiteSpace(localConnectionString))
+                    return localConnectionString;
+            }
+
+            if (File.Exists(defaultSettingsPath))
+            {
+                var defaultConnectionString = ReadConnectionString(defaultSettingsPath);
+                if (!string.IsNullOrWhiteSpace(defaultConnectionString))
+                    return defaultConnectionString;
             }
 
             currentDirectory = currentDirectory.Parent;
         }
 
-        throw new FileNotFoundException("ECommerceProject.Web/appsettings.json bulunamadi.");
+        throw new FileNotFoundException(
+            "DefaultConnection bulunamadi. appsettings.Local.json veya appsettings.json tanimlayin.");
+    }
+
+    private static string? ReadConnectionString(string path)
+    {
+        using var stream = File.OpenRead(path);
+        using var document = JsonDocument.Parse(stream);
+
+        if (document.RootElement.TryGetProperty("ConnectionStrings", out var connectionStrings) &&
+            connectionStrings.TryGetProperty("DefaultConnection", out var defaultConnection))
+        {
+            return defaultConnection.GetString();
+        }
+
+        return null;
     }
 }
