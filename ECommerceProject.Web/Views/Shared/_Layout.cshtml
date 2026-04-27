@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 
 <head>
@@ -18,12 +18,10 @@
     <header>
         <nav class="navbar navbar-dark bg-dark">
             <div class="container position-relative">
-
                 <a class="navbar-brand" asp-controller="Home" asp-action="Index">
                     ECommerce
                 </a>
 
-                <!-- ORTA ARAMA -->
                 <form asp-controller="Product" asp-action="List" method="get"
                       class="position-absolute start-50 translate-middle-x w-50">
                     <div class="input-group">
@@ -33,7 +31,7 @@
                 </form>
 
                 <div class="d-flex align-items-center gap-2">
-                    @if (User.IsInRole("Admin"))
+                    @if (User.IsInRole(AppRoles.Admin))
                     {
                         <a class="btn btn-outline-light btn-sm" asp-controller="Home" asp-action="Admin">
                             Admin
@@ -54,20 +52,16 @@
                         <a class="btn btn-light btn-sm" asp-controller="Account" asp-action="Register">Kayit Ol</a>
                     }
                 </div>
-
             </div>
         </nav>
 
-        <!-- KATEGORİ BAR -->
         <div class="category-bar border-bottom py-2">
             <div class="container category-bar-inner">
-
                 @if (navCategories != null)
                 {
                     foreach (var category in navCategories)
                     {
                         <div class="dropdown category-dropdown">
-
                             <a class="btn btn-sm category-trigger dropdown-toggle" asp-controller="Product" asp-action="List"
                                asp-route-categoryId="@category.Id">
                                 @category.Name
@@ -87,11 +81,9 @@
                                     }
                                 </ul>
                             }
-
                         </div>
                     }
                 }
-
             </div>
         </div>
     </header>

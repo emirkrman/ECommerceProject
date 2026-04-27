@@ -21,14 +21,7 @@ public class CategoryController : BaseController
 
     public async Task<IActionResult> Create()
     {
-        ViewBag.ParentCategories = new SelectList(
-            await _context.Categories
-                .Where(c => c.ParentCategoryId == null)
-                .ToListAsync(),
-            "Id",
-            "Name"
-        );
-
+        await SetParentCategoriesViewBagAsync();
         return View();
     }
 
@@ -37,7 +30,10 @@ public class CategoryController : BaseController
     public async Task<IActionResult> Create(Category model)
     {
         if (!ModelState.IsValid)
+        {
+            await SetParentCategoriesViewBagAsync(model.ParentCategoryId);
             return View(model);
+        }
 
         model.CreatedDate = DateTime.UtcNow;
 
@@ -101,5 +97,14 @@ public class CategoryController : BaseController
         await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task SetParentCategoriesViewBagAsync(int? selectedParentCategoryId = null)
+    {
+        var parentCategories = await _context.Categories
+            .Where(c => c.ParentCategoryId == null)
+            .ToListAsync();
+
+        ViewBag.ParentCategories = new SelectList(parentCategories, "Id", "Name", selectedParentCategoryId);
     }
 }

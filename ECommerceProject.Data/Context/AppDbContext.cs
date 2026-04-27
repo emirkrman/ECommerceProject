@@ -31,24 +31,21 @@ public class AppDbContext : DbContext
             .HasForeignKey(c => c.ParentCategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<AppUser>()
-            .Property(u => u.FullName)
+        var appUser = modelBuilder.Entity<AppUser>();
+
+        appUser.Property(u => u.FullName)
             .HasMaxLength(100);
 
-        modelBuilder.Entity<AppUser>()
-            .Property(u => u.Email)
+        appUser.Property(u => u.Email)
             .HasMaxLength(150);
 
-        modelBuilder.Entity<AppUser>()
-            .Property(u => u.PasswordHash)
+        appUser.Property(u => u.PasswordHash)
             .HasMaxLength(500);
 
-        modelBuilder.Entity<AppUser>()
-            .Property(u => u.Role)
+        appUser.Property(u => u.Role)
             .HasMaxLength(30);
 
-        modelBuilder.Entity<AppUser>()
-            .HasIndex(u => u.Email)
+        appUser.HasIndex(u => u.Email)
             .IsUnique();
     }
 }

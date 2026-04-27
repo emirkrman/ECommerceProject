@@ -4,7 +4,7 @@ namespace ECommerceProject.Web.ViewModels.Products;
 
 public class ProductListViewModel
 {
-    public List<ECommerceProject.Entity.Concrete.Product> ListedProducts { get; set; } = new();
+    public List<Product> ListedProducts { get; set; } = new();
 
     public List<Category> Categories { get; set; } = new();
 
