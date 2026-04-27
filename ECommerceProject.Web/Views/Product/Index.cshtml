@@ -18,19 +18,22 @@
     <tbody>
         @foreach (var item in Model)
         {
+            var category = item.Category;
+            var parentCategory = category?.ParentCategory;
+
             <tr>
                 <td>@item.Name</td>
                 <td>@item.Price</td>
                 <td>@item.Stock</td>
                 <td>
-                    @if (item.Category?.ParentCategory != null)
+                    @if (parentCategory != null && category != null)
                     {
-                        @item.Category.ParentCategory.Name
-                        <span>/</span> <strong>@item.Category.Name</strong>
+                        @parentCategory.Name
+                        <span>/</span> <strong>@category.Name</strong>
                     }
                     else
                     {
-                        <strong>@item.Category?.Name</strong>
+                        <strong>@category?.Name</strong>
                     }
                 </td>
                 <td>@item.IsActive</td>
