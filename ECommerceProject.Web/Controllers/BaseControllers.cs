@@ -1,34 +1,22 @@
-using ECommerceProject.Data.Context;
-using ECommerceProject.Entity.Concrete;
+using ECommerceProject.Business.Services.Abstract;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.EntityFrameworkCore;
 
 namespace ECommerceProject.Web.Controllers;
 
 public class BaseController : Controller
 {
-    protected readonly AppDbContext _context;
+    private readonly INavigationService _navigationService;
 
-    public BaseController(AppDbContext context)
+    public BaseController(INavigationService navigationService)
     {
-        _context = context;
+        _navigationService = navigationService;
     }
 
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        ViewBag.NavCategories = await GetNavigationCategoriesAsync();
+        ViewBag.NavCategories = await _navigationService.GetNavigationCategoriesAsync();
 
         await next();
-    }
-
-    protected async Task<List<Category>> GetNavigationCategoriesAsync()
-    {
-        return await _context.Categories
-            .AsNoTracking()
-            .Include(c => c.SubCategories)
-            .Where(c => c.IsActive && c.ParentCategoryId == null)
-            .OrderBy(c => c.Name)
-            .ToListAsync();
     }
 }

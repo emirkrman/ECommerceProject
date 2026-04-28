@@ -1,27 +1,26 @@
-using ECommerceProject.Data.Context;
+using ECommerceProject.Business.Services.Abstract;
 using ECommerceProject.Entity.Common;
 using ECommerceProject.Entity.Concrete;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace ECommerceProject.Web.Controllers;
 
 [Authorize(Roles = AppRoles.Admin)]
 public class CategoryController : BaseController
 {
-    public CategoryController(AppDbContext context) : base(context) { }
+    private readonly ICategoryService _categoryService;
+
+    public CategoryController(ICategoryService categoryService, INavigationService navigationService)
+        : base(navigationService)
+    {
+        _categoryService = categoryService;
+    }
 
     public async Task<IActionResult> Index()
     {
-        var categories = await _context.Categories
-            .AsNoTracking()
-            .OrderBy(c => c.ParentCategoryId)
-            .ThenBy(c => c.Name)
-            .ToListAsync();
-
-        return View(categories);
+        return View(await _categoryService.GetListAsync());
     }
 
     public async Task<IActionResult> Create()
@@ -40,17 +39,14 @@ public class CategoryController : BaseController
             return View(model);
         }
 
-        model.CreatedDate = DateTime.UtcNow;
-
-        _context.Categories.Add(model);
-        await _context.SaveChangesAsync();
+        await _categoryService.CreateAsync(model);
 
         return RedirectToAction(nameof(Index));
     }
 
     public async Task<IActionResult> Edit(int id)
     {
-        var category = await _context.Categories.FindAsync(id);
+        var category = await _categoryService.GetByIdAsync(id);
         if (category == null)
             return NotFound();
 
@@ -67,23 +63,14 @@ public class CategoryController : BaseController
         if (!ModelState.IsValid)
             return View(model);
 
-        var entity = await _context.Categories.FindAsync(id);
-        if (entity == null)
-            return NotFound();
-
-        entity.Name = model.Name;
-        entity.Description = model.Description;
-        entity.IsActive = model.IsActive;
-        entity.UpdatedDate = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        return RedirectToAction(nameof(Index));
+        return await _categoryService.UpdateAsync(id, model)
+            ? RedirectToAction(nameof(Index))
+            : NotFound();
     }
 
     public async Task<IActionResult> Delete(int id)
     {
-        var category = await _context.Categories.FindAsync(id);
+        var category = await _categoryService.GetByIdAsync(id);
         if (category == null)
             return NotFound();
 
@@ -94,24 +81,14 @@ public class CategoryController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var category = await _context.Categories.FindAsync(id);
-        if (category == null)
-            return NotFound();
-
-        _context.Categories.Remove(category);
-        await _context.SaveChangesAsync();
-
-        return RedirectToAction(nameof(Index));
+        return await _categoryService.DeleteAsync(id)
+            ? RedirectToAction(nameof(Index))
+            : NotFound();
     }
 
     private async Task SetParentCategoriesViewBagAsync(int? selectedParentCategoryId = null)
     {
-        var parentCategories = await _context.Categories
-            .AsNoTracking()
-            .Where(c => c.ParentCategoryId == null)
-            .OrderBy(c => c.Name)
-            .ToListAsync();
-
+        var parentCategories = await _categoryService.GetParentCategoriesAsync();
         ViewBag.ParentCategories = new SelectList(parentCategories, "Id", "Name", selectedParentCategoryId);
     }
 }

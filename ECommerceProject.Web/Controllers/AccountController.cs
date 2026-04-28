@@ -1,23 +1,23 @@
 using System.Security.Claims;
-using ECommerceProject.Data.Context;
-using ECommerceProject.Entity.Common;
+using ECommerceProject.Business.Models.Accounts;
+using ECommerceProject.Business.Services.Abstract;
 using ECommerceProject.Entity.Concrete;
 using ECommerceProject.Web.ViewModels.Account;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace ECommerceProject.Web.Controllers;
 
 public class AccountController : BaseController
 {
-    private readonly PasswordHasher<AppUser> _passwordHasher = new();
+    private readonly IAccountService _accountService;
 
-    public AccountController(AppDbContext context) : base(context)
+    public AccountController(IAccountService accountService, INavigationService navigationService)
+        : base(navigationService)
     {
+        _accountService = accountService;
     }
 
     [HttpGet]
@@ -41,29 +41,20 @@ public class AccountController : BaseController
         if (!ModelState.IsValid)
             return View(model);
 
-        var normalizedEmail = NormalizeEmail(model.Email);
-
-        var emailExists = await _context.Users.AnyAsync(u => u.Email == normalizedEmail);
-        if (emailExists)
+        var result = await _accountService.RegisterAsync(new RegisterRequest
         {
-            ModelState.AddModelError(nameof(RegisterViewModel.Email), "Bu e-posta adresi zaten kayitli.");
+            FullName = model.FullName,
+            Email = model.Email,
+            Password = model.Password
+        });
+
+        if (!result.Succeeded)
+        {
+            ModelState.AddModelError(result.ErrorField ?? string.Empty, result.ErrorMessage!);
             return View(model);
         }
 
-        var user = new AppUser
-        {
-            FullName = model.FullName.Trim(),
-            Email = normalizedEmail,
-            Role = AppRoles.Customer,
-            CreatedDate = DateTime.UtcNow
-        };
-
-        user.PasswordHash = _passwordHasher.HashPassword(user, model.Password);
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        await SignInUserAsync(user, isPersistent: false);
+        await SignInUserAsync(result.User!, isPersistent: false);
 
         return RedirectToAction("Index", "Home");
     }
@@ -92,30 +83,19 @@ public class AccountController : BaseController
         if (!ModelState.IsValid)
             return View(model);
 
-        var normalizedEmail = NormalizeEmail(model.Email);
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
-
-        if (user == null)
+        var result = await _accountService.LoginAsync(new LoginRequest
         {
-            ModelState.AddModelError(string.Empty, "E-posta veya sifre hatali.");
+            Email = model.Email,
+            Password = model.Password
+        });
+
+        if (!result.Succeeded)
+        {
+            ModelState.AddModelError(result.ErrorField ?? string.Empty, result.ErrorMessage!);
             return View(model);
         }
 
-        var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, model.Password);
-        if (verificationResult == PasswordVerificationResult.Failed)
-        {
-            ModelState.AddModelError(string.Empty, "E-posta veya sifre hatali.");
-            return View(model);
-        }
-
-        if (verificationResult == PasswordVerificationResult.SuccessRehashNeeded)
-        {
-            user.PasswordHash = _passwordHasher.HashPassword(user, model.Password);
-            user.UpdatedDate = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-        }
-
-        await SignInUserAsync(user, model.RememberMe);
+        await SignInUserAsync(result.User!, model.RememberMe);
 
         if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl);
@@ -153,11 +133,6 @@ public class AccountController : BaseController
                 IsPersistent = isPersistent,
                 ExpiresUtc = isPersistent ? DateTimeOffset.UtcNow.AddDays(14) : null
             });
-    }
-
-    private static string NormalizeEmail(string email)
-    {
-        return email.Trim().ToLowerInvariant();
     }
 
     private bool IsAuthenticated()

@@ -1,27 +1,25 @@
-using ECommerceProject.Data.Context;
+using ECommerceProject.Business.Services.Abstract;
 using ECommerceProject.Entity.Common;
 using ECommerceProject.Web.ViewModels.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
 namespace ECommerceProject.Web.Controllers;
 
 public class HomeController : BaseController
 {
-    public HomeController(AppDbContext context) : base(context) { }
+    private readonly IProductService _productService;
+
+    public HomeController(IProductService productService, INavigationService navigationService)
+        : base(navigationService)
+    {
+        _productService = productService;
+    }
 
     public async Task<IActionResult> Index()
     {
-        var products = await _context.Products
-            .AsNoTracking()
-            .Where(p => p.IsActive)
-            .OrderByDescending(p => p.CreatedDate)
-            .Take(12)
-            .ToListAsync();
-
-        return View(products);
+        return View(await _productService.GetLatestActiveProductsAsync(12));
     }
 
     public IActionResult Privacy()
