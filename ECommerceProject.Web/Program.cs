@@ -3,6 +3,7 @@ using ECommerceProject.Business.Services.Concrete;
 using ECommerceProject.Data.Context;
 using ECommerceProject.Data.Repositories.Abstract;
 using ECommerceProject.Data.Repositories.Concrete;
+using ECommerceProject.Data.UnitOfWork;
 using ECommerceProject.Web.Mapping;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IAccountService, AccountService>();

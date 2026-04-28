@@ -1,5 +1,6 @@
 using ECommerceProject.Business.Services.Abstract;
 using ECommerceProject.Data.Repositories.Abstract;
+using ECommerceProject.Data.UnitOfWork;
 using ECommerceProject.Entity.Concrete;
 
 namespace ECommerceProject.Business.Services.Concrete;
@@ -7,10 +8,12 @@ namespace ECommerceProject.Business.Services.Concrete;
 public class CategoryService : ICategoryService
 {
     private readonly ICategoryRepository _categoryRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CategoryService(ICategoryRepository categoryRepository)
+    public CategoryService(ICategoryRepository categoryRepository, IUnitOfWork unitOfWork)
     {
         _categoryRepository = categoryRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<List<Category>> GetListAsync()
@@ -33,7 +36,7 @@ public class CategoryService : ICategoryService
         model.CreatedDate = DateTime.UtcNow;
 
         await _categoryRepository.AddAsync(model);
-        await _categoryRepository.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<bool> UpdateAsync(int id, Category model)
@@ -47,7 +50,7 @@ public class CategoryService : ICategoryService
         entity.IsActive = model.IsActive;
         entity.UpdatedDate = DateTime.UtcNow;
 
-        await _categoryRepository.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
         return true;
     }
 
@@ -58,7 +61,7 @@ public class CategoryService : ICategoryService
             return false;
 
         _categoryRepository.Remove(category);
-        await _categoryRepository.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
         return true;
     }
 }

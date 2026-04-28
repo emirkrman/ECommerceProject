@@ -1,6 +1,7 @@
 using ECommerceProject.Business.Models.Accounts;
 using ECommerceProject.Business.Services.Abstract;
 using ECommerceProject.Data.Repositories.Abstract;
+using ECommerceProject.Data.UnitOfWork;
 using ECommerceProject.Entity.Common;
 using ECommerceProject.Entity.Concrete;
 using Microsoft.AspNetCore.Identity;
@@ -10,11 +11,13 @@ namespace ECommerceProject.Business.Services.Concrete;
 public class AccountService : IAccountService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly PasswordHasher<AppUser> _passwordHasher = new();
 
-    public AccountService(IUserRepository userRepository)
+    public AccountService(IUserRepository userRepository, IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<AccountResult> RegisterAsync(RegisterRequest request)
@@ -37,7 +40,7 @@ public class AccountService : IAccountService
         user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
 
         await _userRepository.AddAsync(user);
-        await _userRepository.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         return AccountResult.Success(user);
     }
@@ -62,7 +65,7 @@ public class AccountService : IAccountService
         {
             user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
             user.UpdatedDate = DateTime.UtcNow;
-            await _userRepository.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
 
         return AccountResult.Success(user);

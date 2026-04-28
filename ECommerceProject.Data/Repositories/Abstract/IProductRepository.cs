@@ -19,5 +19,4 @@ public interface IProductRepository
     Task<Product?> GetByIdWithCategoryAsync(int id);
     Task AddAsync(Product product);
     void Remove(Product product);
-    Task SaveChangesAsync();
 }

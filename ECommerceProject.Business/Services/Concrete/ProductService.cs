@@ -2,6 +2,7 @@ using ECommerceProject.Business.Models.Common;
 using ECommerceProject.Business.Models.Products;
 using ECommerceProject.Business.Services.Abstract;
 using ECommerceProject.Data.Repositories.Abstract;
+using ECommerceProject.Data.UnitOfWork;
 using ECommerceProject.Entity.Concrete;
 using Microsoft.AspNetCore.Http;
 
@@ -14,15 +15,18 @@ public class ProductService : IProductService
     private readonly IProductRepository _productRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IImageService _imageService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public ProductService(
         IProductRepository productRepository,
         ICategoryRepository categoryRepository,
-        IImageService imageService)
+        IImageService imageService,
+        IUnitOfWork unitOfWork)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
         _imageService = imageService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ProductListResult> GetPublicListAsync(int? categoryId, string? search, string? sort, int page)
@@ -94,7 +98,7 @@ public class ProductService : IProductService
         var entity = CreateProductEntity(formData, await _imageService.SaveProductImageAsync(formData.ImageFile));
 
         await _productRepository.AddAsync(entity);
-        await _productRepository.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<bool> UpdateAsync(int id, ProductFormData formData)
@@ -112,7 +116,7 @@ public class ProductService : IProductService
             _imageService.DeleteProductImage(oldImageUrl);
         }
 
-        await _productRepository.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
         return true;
     }
 
@@ -124,7 +128,7 @@ public class ProductService : IProductService
 
         _imageService.DeleteProductImage(product.ImageUrl);
         _productRepository.Remove(product);
-        await _productRepository.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
         return true;
     }
 

@@ -78,8 +78,4 @@ public class CategoryRepository : ICategoryRepository
         _context.Categories.Remove(category);
     }
 
-    public async Task SaveChangesAsync()
-    {
-        await _context.SaveChangesAsync();
-    }
 }

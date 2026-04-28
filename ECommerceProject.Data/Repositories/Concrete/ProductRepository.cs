@@ -105,11 +105,6 @@ public class ProductRepository : IProductRepository
         _context.Products.Remove(product);
     }
 
-    public async Task SaveChangesAsync()
-    {
-        await _context.SaveChangesAsync();
-    }
-
     private IQueryable<Product> BuildPublicQuery(IReadOnlyCollection<int>? categoryIds, string? search)
     {
         var query = _context.Products
