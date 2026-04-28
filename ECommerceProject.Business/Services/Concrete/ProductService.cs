@@ -27,11 +27,15 @@ public class ProductService : IProductService
 
     public async Task<ProductListResult> GetPublicListAsync(int? categoryId, string? search, string? sort, int page)
     {
+        page = Math.Max(page, 1);
         search = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
+        var categoryIds = categoryId.HasValue
+            ? await _categoryRepository.GetCategoryAndSubCategoryIdsAsync(categoryId.Value)
+            : null;
 
-        var totalProducts = await _productRepository.CountPublicListAsync(categoryId, search);
+        var totalProducts = await _productRepository.CountPublicListAsync(categoryIds, search);
         var products = await _productRepository.GetPublicListAsync(
-            categoryId,
+            categoryIds,
             search,
             sort,
             (page - 1) * ProductListPageSize,

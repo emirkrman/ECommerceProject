@@ -1,3 +1,4 @@
+using AutoMapper;
 using ECommerceProject.Business.Models.Products;
 using ECommerceProject.Business.Services.Abstract;
 using ECommerceProject.Entity.Common;
@@ -13,28 +14,23 @@ namespace ECommerceProject.Web.Controllers;
 public class ProductController : BaseController
 {
     private readonly IProductService _productService;
+    private readonly IMapper _mapper;
 
-    public ProductController(IProductService productService, INavigationService navigationService)
+    public ProductController(
+        IProductService productService,
+        INavigationService navigationService,
+        IMapper mapper)
         : base(navigationService)
     {
         _productService = productService;
+        _mapper = mapper;
     }
 
     [AllowAnonymous]
     public async Task<IActionResult> List(int? categoryId, string? search, string? sort = null, int page = 1)
     {
         var result = await _productService.GetPublicListAsync(categoryId, search, sort, page);
-
-        var model = new ProductListViewModel
-        {
-            ListedProducts = result.Products,
-            Categories = result.Categories,
-            CategoryId = result.CategoryId,
-            Search = result.Search,
-            Sort = result.Sort,
-            CurrentPage = result.CurrentPage,
-            TotalPages = result.TotalPages
-        };
+        var model = _mapper.Map<ProductListViewModel>(result);
 
         return View(model);
     }
@@ -76,7 +72,7 @@ public class ProductController : BaseController
             return View(model);
         }
 
-        await _productService.CreateAsync(MapToFormData(model));
+        await _productService.CreateAsync(_mapper.Map<ProductFormData>(model));
 
         return RedirectToAction(nameof(Index));
     }
@@ -88,7 +84,7 @@ public class ProductController : BaseController
             return NotFound();
 
         await SetCategoriesViewBagAsync(formData.CategoryId);
-        return View(MapToViewModel(formData));
+        return View(_mapper.Map<ProductFormViewModel>(formData));
     }
 
     [HttpPost]
@@ -112,7 +108,7 @@ public class ProductController : BaseController
             return View(model);
         }
 
-        return await _productService.UpdateAsync(id, MapToFormData(model))
+        return await _productService.UpdateAsync(id, _mapper.Map<ProductFormData>(model))
             ? RedirectToAction(nameof(Index))
             : NotFound();
     }
@@ -150,34 +146,4 @@ public class ProductController : BaseController
         }
     }
 
-    private static ProductFormData MapToFormData(ProductFormViewModel model)
-    {
-        return new ProductFormData
-        {
-            Id = model.Id,
-            Name = model.Name,
-            Description = model.Description,
-            Price = model.Price,
-            Stock = model.Stock,
-            ExistingImageUrl = model.ExistingImageUrl,
-            ImageFile = model.ImageFile,
-            IsActive = model.IsActive,
-            CategoryId = model.CategoryId
-        };
-    }
-
-    private static ProductFormViewModel MapToViewModel(ProductFormData formData)
-    {
-        return new ProductFormViewModel
-        {
-            Id = formData.Id,
-            Name = formData.Name,
-            Description = formData.Description,
-            Price = formData.Price,
-            Stock = formData.Stock,
-            ExistingImageUrl = formData.ExistingImageUrl,
-            IsActive = formData.IsActive,
-            CategoryId = formData.CategoryId
-        };
-    }
 }

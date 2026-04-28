@@ -8,17 +8,20 @@ namespace ECommerceProject.Data.Repositories.Concrete;
 public class ProductRepository : IProductRepository
 {
     private readonly AppDbContext _context;
-    private readonly ICategoryRepository _categoryRepository;
 
-    public ProductRepository(AppDbContext context, ICategoryRepository categoryRepository)
+    public ProductRepository(AppDbContext context)
     {
         _context = context;
-        _categoryRepository = categoryRepository;
     }
 
-    public async Task<List<Product>> GetPublicListAsync(int? categoryId, string? search, string? sort, int skip, int take)
+    public async Task<List<Product>> GetPublicListAsync(
+        IReadOnlyCollection<int>? categoryIds,
+        string? search,
+        string? sort,
+        int skip,
+        int take)
     {
-        var query = await BuildPublicQueryAsync(categoryId, search);
+        var query = BuildPublicQuery(categoryIds, search);
 
         return await ApplyPublicSort(query, sort)
             .Skip(skip)
@@ -26,9 +29,9 @@ public class ProductRepository : IProductRepository
             .ToListAsync();
     }
 
-    public async Task<int> CountPublicListAsync(int? categoryId, string? search)
+    public async Task<int> CountPublicListAsync(IReadOnlyCollection<int>? categoryIds, string? search)
     {
-        var query = await BuildPublicQueryAsync(categoryId, search);
+        var query = BuildPublicQuery(categoryIds, search);
         return await query.CountAsync();
     }
 
@@ -107,7 +110,7 @@ public class ProductRepository : IProductRepository
         await _context.SaveChangesAsync();
     }
 
-    private async Task<IQueryable<Product>> BuildPublicQueryAsync(int? categoryId, string? search)
+    private IQueryable<Product> BuildPublicQuery(IReadOnlyCollection<int>? categoryIds, string? search)
     {
         var query = _context.Products
             .AsNoTracking()
@@ -116,9 +119,8 @@ public class ProductRepository : IProductRepository
             .Where(p => p.IsActive)
             .AsQueryable();
 
-        if (categoryId.HasValue)
+        if (categoryIds is { Count: > 0 })
         {
-            var categoryIds = await _categoryRepository.GetCategoryAndSubCategoryIdsAsync(categoryId.Value);
             query = query.Where(p => categoryIds.Contains(p.CategoryId));
         }
 

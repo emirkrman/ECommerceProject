@@ -4,8 +4,14 @@ namespace ECommerceProject.Data.Repositories.Abstract;
 
 public interface IProductRepository
 {
-    Task<List<Product>> GetPublicListAsync(int? categoryId, string? search, string? sort, int skip, int take);
-    Task<int> CountPublicListAsync(int? categoryId, string? search);
+    Task<List<Product>> GetPublicListAsync(
+        IReadOnlyCollection<int>? categoryIds,
+        string? search,
+        string? sort,
+        int skip,
+        int take);
+
+    Task<int> CountPublicListAsync(IReadOnlyCollection<int>? categoryIds, string? search);
     Task<Product?> GetActiveDetailsAsync(int id);
     Task<List<Product>> GetAdminListAsync(string? sort);
     Task<List<Product>> GetLatestActiveAsync(int count);

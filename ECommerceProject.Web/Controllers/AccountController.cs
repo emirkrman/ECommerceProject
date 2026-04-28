@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using AutoMapper;
 using ECommerceProject.Business.Models.Accounts;
 using ECommerceProject.Business.Services.Abstract;
 using ECommerceProject.Entity.Concrete;
@@ -13,11 +14,16 @@ namespace ECommerceProject.Web.Controllers;
 public class AccountController : BaseController
 {
     private readonly IAccountService _accountService;
+    private readonly IMapper _mapper;
 
-    public AccountController(IAccountService accountService, INavigationService navigationService)
+    public AccountController(
+        IAccountService accountService,
+        INavigationService navigationService,
+        IMapper mapper)
         : base(navigationService)
     {
         _accountService = accountService;
+        _mapper = mapper;
     }
 
     [HttpGet]
@@ -41,12 +47,7 @@ public class AccountController : BaseController
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await _accountService.RegisterAsync(new RegisterRequest
-        {
-            FullName = model.FullName,
-            Email = model.Email,
-            Password = model.Password
-        });
+        var result = await _accountService.RegisterAsync(_mapper.Map<RegisterRequest>(model));
 
         if (!result.Succeeded)
         {
@@ -83,11 +84,7 @@ public class AccountController : BaseController
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await _accountService.LoginAsync(new LoginRequest
-        {
-            Email = model.Email,
-            Password = model.Password
-        });
+        var result = await _accountService.LoginAsync(_mapper.Map<LoginRequest>(model));
 
         if (!result.Succeeded)
         {
