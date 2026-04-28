@@ -25,8 +25,10 @@ public class BaseController : Controller
     protected async Task<List<Category>> GetNavigationCategoriesAsync()
     {
         return await _context.Categories
+            .AsNoTracking()
             .Include(c => c.SubCategories)
             .Where(c => c.IsActive && c.ParentCategoryId == null)
+            .OrderBy(c => c.Name)
             .ToListAsync();
     }
 }

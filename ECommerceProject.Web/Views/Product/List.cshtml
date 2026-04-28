@@ -1,7 +1,7 @@
 @model ECommerceProject.Web.ViewModels.Products.ProductListViewModel
 
 @{
-    ViewData["Title"] = "Products";
+    ViewData["Title"] = "Ürünler";
 }
 
 <div class="container py-4">
@@ -25,14 +25,11 @@
                         <select id="sortSelect" name="sort" class="form-select">
                             <option value="" selected="@string.IsNullOrWhiteSpace(Model.Sort)">Önerilen</option>
                             <option value="newest" selected="@(Model.Sort == "newest")">En Yeni</option>
-                            <option value="price_asc" selected="@(Model.Sort == "price_asc")">Fiyat: Düşükten Yükseğe
-                            </option>
-                            <option value="price_desc" selected="@(Model.Sort == "price_desc")">Fiyat: Yüksekten Düşüğe
-                            </option>
+                            <option value="price_asc" selected="@(Model.Sort == "price_asc")">Fiyat: Düşükten Yükseğe</option>
+                            <option value="price_desc" selected="@(Model.Sort == "price_desc")">Fiyat: Yüksekten Düşüğe</option>
                             <option value="name_asc" selected="@(Model.Sort == "name_asc")">Alfabetik: A-Z</option>
                             <option value="name_desc" selected="@(Model.Sort == "name_desc")">Alfabetik: Z-A</option>
-                            <option value="rating_desc" selected="@(Model.Sort == "rating_desc")">En Yüksek Puan
-                            </option>
+                            <option value="rating_desc" selected="@(Model.Sort == "rating_desc")">En Yüksek Puan</option>
                         </select>
                     </form>
 
@@ -40,7 +37,7 @@
                         <div class="small text-muted mb-2">Kategoriler</div>
 
                         <a asp-action="List" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort"
-                               class="filter-link @(Model.CategoryId == null ? "active" : "")">
+                           class="filter-link @(Model.CategoryId == null ? "active" : "")">
                             Tüm Ürünler
                         </a>
 
@@ -48,8 +45,8 @@
                         {
                             <div class="mb-2">
                                 <a asp-action="List" asp-route-categoryId="@category.Id" asp-route-search="@Model.Search"
-                                       asp-route-sort="@Model.Sort"
-                                       class="filter-link fw-semibold @(Model.CategoryId == category.Id ? "active" : "")">
+                                   asp-route-sort="@Model.Sort"
+                                   class="filter-link fw-semibold @(Model.CategoryId == category.Id ? "active" : "")">
                                     @category.Name
                                 </a>
 
@@ -59,8 +56,8 @@
                                         @foreach (var sub in category.SubCategories)
                                         {
                                             <a asp-action="List" asp-route-categoryId="@sub.Id" asp-route-search="@Model.Search"
-                                                   asp-route-sort="@Model.Sort"
-                                                   class="filter-link small @(Model.CategoryId == sub.Id ? "active" : "")">
+                                               asp-route-sort="@Model.Sort"
+                                               class="filter-link small @(Model.CategoryId == sub.Id ? "active" : "")">
                                                 @sub.Name
                                             </a>
                                         }
@@ -101,7 +98,7 @@
                     {
                         <div class="col-6 col-md-4 col-xl-3">
                             <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id"
-                                   class="text-decoration-none text-dark">
+                               class="text-decoration-none text-dark">
                                 <div class="card h-100 border-0 shadow-sm product-card">
                                     <img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "https://placehold.co/600x400?text=Product" : product.ImageUrl)"
                                          class="card-img-top" style="height: 190px; object-fit: cover;" />
@@ -134,7 +131,7 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-body text-center py-5">
                         <h5>Sonuç Bulunamadı</h5>
-                        <p class="text-muted mb-0">Arama veya kategori filtresini detaylandırıp tekrar deneyin.</p>
+                        <p class="text-muted mb-0">Arama veya kategori filtresini değiştirip tekrar deneyin.</p>
                     </div>
                 </div>
             }
@@ -147,8 +144,8 @@
                         {
                             <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
                                 <a class="page-link" asp-action="List" asp-route-page="@i"
-                                       asp-route-categoryId="@Model.CategoryId" asp-route-search="@Model.Search"
-                                       asp-route-sort="@Model.Sort">
+                                   asp-route-categoryId="@Model.CategoryId" asp-route-search="@Model.Search"
+                                   asp-route-sort="@Model.Sort">
                                     @i
                                 </a>
                             </li>

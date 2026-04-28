@@ -33,7 +33,10 @@ public class ProductController : BaseController
     [AllowAnonymous]
     public async Task<IActionResult> List(int? categoryId, string? search, string? sort = null, int page = 1)
     {
+        search = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
+
         var query = _context.Products
+            .AsNoTracking()
             .Include(p => p.Category)
             .ThenInclude(c => c!.ParentCategory)
             .Where(p => p.IsActive)
@@ -42,6 +45,7 @@ public class ProductController : BaseController
         if (categoryId.HasValue)
         {
             var subCategoryIds = await _context.Categories
+                .AsNoTracking()
                 .Where(c => c.ParentCategoryId == categoryId.Value)
                 .Select(c => c.Id)
                 .ToListAsync();
@@ -77,7 +81,7 @@ public class ProductController : BaseController
         var model = new ProductListViewModel
         {
             ListedProducts = products,
-            Categories = await GetRootCategoriesAsync(),
+            Categories = await GetNavigationCategoriesAsync(),
             CategoryId = categoryId,
             Search = search,
             Sort = sort,
@@ -92,6 +96,7 @@ public class ProductController : BaseController
     public async Task<IActionResult> Details(int id)
     {
         var product = await _context.Products
+            .AsNoTracking()
             .Include(p => p.Category)
             .ThenInclude(c => c!.ParentCategory)
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
@@ -102,6 +107,7 @@ public class ProductController : BaseController
     public async Task<IActionResult> Index(string? sort = null)
     {
         var query = _context.Products
+            .AsNoTracking()
             .Include(p => p.Category)
             .ThenInclude(c => c!.ParentCategory)
             .AsQueryable();
@@ -208,6 +214,7 @@ public class ProductController : BaseController
     public async Task<IActionResult> Delete(int id)
     {
         var product = await _context.Products
+            .AsNoTracking()
             .Include(p => p.Category)
             .FirstOrDefaultAsync(p => p.Id == id);
 
@@ -279,15 +286,9 @@ public class ProductController : BaseController
     private async Task<List<Category>> GetActiveCategoriesAsync()
     {
         return await _context.Categories
+            .AsNoTracking()
             .Where(c => c.IsActive)
-            .ToListAsync();
-    }
-
-    private async Task<List<Category>> GetRootCategoriesAsync()
-    {
-        return await _context.Categories
-            .Include(c => c.SubCategories)
-            .Where(c => c.IsActive && c.ParentCategoryId == null)
+            .OrderBy(c => c.Name)
             .ToListAsync();
     }
 

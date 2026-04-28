@@ -1,49 +1,49 @@
 @model List<ECommerceProject.Entity.Concrete.Product>
 
-<h2>Products</h2>
+<h2>Ürünler</h2>
 
-<a asp-action="Create" class="btn btn-success mb-2">New Product</a>
+<a asp-action="Create" class="btn btn-success mb-2">Yeni Ürün</a>
 
 <table class="table admin-products-table" id="productsTable">
     <thead>
         <tr>
             <th>
                 <button type="button" class="sort-button" data-sort-key="name" data-sort-type="text">
-                    <span>Name</span>
+                    <span>Ad</span>
                     <span class="sort-indicator"></span>
                 </button>
             </th>
             <th>
                 <button type="button" class="sort-button" data-sort-key="price" data-sort-type="number">
-                    <span>Price</span>
+                    <span>Fiyat</span>
                     <span class="sort-indicator"></span>
                 </button>
             </th>
             <th>
                 <button type="button" class="sort-button" data-sort-key="stock" data-sort-type="number">
-                    <span>Stock</span>
+                    <span>Stok</span>
                     <span class="sort-indicator"></span>
                 </button>
             </th>
             <th>
                 <button type="button" class="sort-button" data-sort-key="rating" data-sort-type="number">
-                    <span>Rating</span>
+                    <span>Puan</span>
                     <span class="sort-indicator"></span>
                 </button>
             </th>
             <th>
                 <button type="button" class="sort-button" data-sort-key="category" data-sort-type="text">
-                    <span>Category</span>
+                    <span>Kategori</span>
                     <span class="sort-indicator"></span>
                 </button>
             </th>
             <th>
                 <button type="button" class="sort-button" data-sort-key="active" data-sort-type="text">
-                    <span>Active</span>
+                    <span>Aktif</span>
                     <span class="sort-indicator"></span>
                 </button>
             </th>
-            <th>Actions</th>
+            <th>İşlemler</th>
         </tr>
     </thead>
     <tbody>
@@ -74,8 +74,8 @@
                 </td>
                 <td data-sort-value="@item.IsActive">@item.IsActive</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Delete</a>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Düzenle</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Sil</a>
                 </td>
             </tr>
         }
@@ -142,7 +142,7 @@
                     return;
                 }
 
-                indicator.textContent = currentDirection === "asc" ? "↑" : "↓";
+                indicator.textContent = currentDirection === "asc" ? "\u2191" : "\u2193";
             });
         };
 

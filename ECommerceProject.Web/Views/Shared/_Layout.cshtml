@@ -43,13 +43,13 @@
                         <span class="text-white-50 small">Merhaba, @User.Identity.Name</span>
                         <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-outline-light btn-sm">Cikis</button>
+                            <button type="submit" class="btn btn-outline-light btn-sm">Çıkış</button>
                         </form>
                     }
                     else
                     {
-                        <a class="btn btn-outline-light btn-sm" asp-controller="Account" asp-action="Login">Giris</a>
-                        <a class="btn btn-light btn-sm" asp-controller="Account" asp-action="Register">Kayit Ol</a>
+                        <a class="btn btn-outline-light btn-sm" asp-controller="Account" asp-action="Login">Giriş</a>
+                        <a class="btn btn-light btn-sm" asp-controller="Account" asp-action="Register">Kayıt Ol</a>
                     }
                 </div>
             </div>
@@ -96,7 +96,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - ECommerceProject.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - ECommerceProject.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Gizlilik</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

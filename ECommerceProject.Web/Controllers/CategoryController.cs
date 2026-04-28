@@ -15,7 +15,12 @@ public class CategoryController : BaseController
 
     public async Task<IActionResult> Index()
     {
-        var categories = await _context.Categories.ToListAsync();
+        var categories = await _context.Categories
+            .AsNoTracking()
+            .OrderBy(c => c.ParentCategoryId)
+            .ThenBy(c => c.Name)
+            .ToListAsync();
+
         return View(categories);
     }
 
@@ -102,7 +107,9 @@ public class CategoryController : BaseController
     private async Task SetParentCategoriesViewBagAsync(int? selectedParentCategoryId = null)
     {
         var parentCategories = await _context.Categories
+            .AsNoTracking()
             .Where(c => c.ParentCategoryId == null)
+            .OrderBy(c => c.Name)
             .ToListAsync();
 
         ViewBag.ParentCategories = new SelectList(parentCategories, "Id", "Name", selectedParentCategoryId);

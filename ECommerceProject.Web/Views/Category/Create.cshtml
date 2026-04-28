@@ -1,6 +1,6 @@
 @model ECommerceProject.Entity.Concrete.Category
 
-<h2>Create Category</h2>
+<h2>Kategori Oluştur</h2>
 
 @if (TempData["Error"] != null)
 {
@@ -10,22 +10,29 @@
 }
 
 <form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
     <div class="mb-3">
-        <label>Name</label>
+        <label asp-for="Name" class="form-label">Kategori Adı</label>
         <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label>Description</label>
+        <label asp-for="Description" class="form-label">Açıklama</label>
         <input asp-for="Description" class="form-control" />
     </div>
 
     <div class="mb-3">
-        <label>Parent Category</label>
+        <label asp-for="ParentCategoryId" class="form-label">Üst Kategori</label>
         <select asp-for="ParentCategoryId" asp-items="ViewBag.ParentCategories" class="form-control">
             <option value="">Ana kategori (boş bırak)</option>
         </select>
     </div>
 
-    <button type="submit" class="btn btn-primary">Save</button>
+    <button type="submit" class="btn btn-primary">Kaydet</button>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

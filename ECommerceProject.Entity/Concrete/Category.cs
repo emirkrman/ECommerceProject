@@ -1,9 +1,11 @@
 using ECommerceProject.Entity.Common;
+using System.ComponentModel.DataAnnotations;
 
 namespace ECommerceProject.Entity.Concrete;
 
 public class Category : BaseEntity
 {
+    [Required(ErrorMessage = "Kategori adi bos olamaz.")]
     public string Name { get; set; } = null!;
 
     public string? Description { get; set; }
