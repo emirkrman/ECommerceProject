@@ -14,28 +14,28 @@ public class CartRepository : ICartRepository
         _context = context;
     }
 
-    public async Task<List<Cart>> GetByUserIdAsync(int userId)
+    public async Task<Cart?> GetByUserIdAsync(int userId)
     {
         return await _context.Carts
             .AsNoTracking()
-            .Include(c => c.Product)
+            .Include(c => c.Items)
+            .ThenInclude(i => i.Product)
             .ThenInclude(p => p!.Category)
-            .Where(c => c.UserId == userId)
-            .OrderByDescending(c => c.CreatedDate)
-            .ToListAsync();
+            .FirstOrDefaultAsync(c => c.UserId == userId);
     }
 
-    public async Task<List<Cart>> GetTrackedByUserIdAsync(int userId)
+    public async Task<Cart?> GetTrackedByUserIdAsync(int userId)
     {
         return await _context.Carts
-            .Where(c => c.UserId == userId)
-            .ToListAsync();
+            .Include(c => c.Items)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
     }
 
-    public async Task<Cart?> GetByUserAndProductAsync(int userId, int productId)
+    public async Task<CartItem?> GetItemByUserAndProductAsync(int userId, int productId)
     {
-        return await _context.Carts
-            .FirstOrDefaultAsync(c => c.UserId == userId && c.ProductId == productId);
+        return await _context.CartItems
+            .Include(i => i.Cart)
+            .FirstOrDefaultAsync(i => i.Cart != null && i.Cart.UserId == userId && i.ProductId == productId);
     }
 
     public async Task AddAsync(Cart cart)
@@ -48,8 +48,13 @@ public class CartRepository : ICartRepository
         _context.Carts.Remove(cart);
     }
 
-    public void RemoveRange(IEnumerable<Cart> carts)
+    public void RemoveItem(CartItem cartItem)
     {
-        _context.Carts.RemoveRange(carts);
+        _context.CartItems.Remove(cartItem);
+    }
+
+    public void RemoveItems(IEnumerable<CartItem> cartItems)
+    {
+        _context.CartItems.RemoveRange(cartItems);
     }
 }

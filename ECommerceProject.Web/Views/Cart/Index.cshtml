@@ -1,8 +1,9 @@
-@model List<ECommerceProject.Entity.Concrete.Cart>
+@model ECommerceProject.Entity.Concrete.Cart?
 
 @{
     ViewData["Title"] = "Sepetim";
-    var cartTotal = Model
+    var cartItems = Model?.Items ?? new List<ECommerceProject.Entity.Concrete.CartItem>();
+    var cartTotal = cartItems
         .Where(item => item.Product != null)
         .Sum(item => item.Product!.Price * item.Quantity);
 }
@@ -14,7 +15,7 @@
             <p class="text-muted mb-0">Sepetinizdeki urunleri buradan yonetebilirsiniz.</p>
         </div>
 
-        @if (Model.Any())
+        @if (cartItems.Any())
         {
             <form asp-action="Clear" method="post" id="clearCartForm" class="js-cart-form js-cart-clear-form">
                 @Html.AntiForgeryToken()
@@ -35,7 +36,7 @@
         <div class="alert alert-danger">@errorMessage</div>
     }
 
-    <div id="cartEmptyState" class="card border-0 shadow-sm @(Model.Any() ? "d-none" : "")">
+    <div id="cartEmptyState" class="card border-0 shadow-sm @(cartItems.Any() ? "d-none" : "")">
         <div class="card-body text-center py-5">
             <h5>Sepetiniz bos</h5>
             <p class="text-muted">Urunleri inceleyip sepetinize ekleyebilirsiniz.</p>
@@ -43,7 +44,7 @@
         </div>
     </div>
 
-    <div id="cartContent" class="row g-4 @(!Model.Any() ? "d-none" : "")">
+    <div id="cartContent" class="row g-4 @(!cartItems.Any() ? "d-none" : "")">
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm">
                 <div class="table-responsive">
@@ -57,7 +58,7 @@
                             </tr>
                         </thead>
                         <tbody id="cartItems">
-                            @foreach (var item in Model)
+                            @foreach (var item in cartItems)
                             {
                                 var product = item.Product;
                                 var subtotal = product == null ? 0 : product.Price * item.Quantity;

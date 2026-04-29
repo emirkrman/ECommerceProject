@@ -22,7 +22,7 @@ public class CartService : ICartService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<List<Cart>> GetUserCartAsync(int userId)
+    public async Task<Cart?> GetUserCartAsync(int userId)
     {
         return await _cartRepository.GetByUserIdAsync(userId);
     }
@@ -39,7 +39,8 @@ public class CartService : ICartService
         if (product.Stock <= 0)
             return CartOperationResult.Failure("Bu urun stokta yok.");
 
-        var cartItem = await _cartRepository.GetByUserAndProductAsync(userId, productId);
+        var cart = await GetOrCreateTrackedCartAsync(userId);
+        var cartItem = cart.Items.FirstOrDefault(i => i.ProductId == productId);
         var newQuantity = quantity + (cartItem?.Quantity ?? 0);
 
         if (newQuantity > product.Stock)
@@ -47,9 +48,8 @@ public class CartService : ICartService
 
         if (cartItem == null)
         {
-            await _cartRepository.AddAsync(new Cart
+            cart.Items.Add(new CartItem
             {
-                UserId = userId,
                 ProductId = productId,
                 Quantity = quantity,
                 CreatedDate = DateTime.UtcNow
@@ -61,19 +61,24 @@ public class CartService : ICartService
             cartItem.UpdatedDate = DateTime.UtcNow;
         }
 
+        cart.UpdatedDate = DateTime.UtcNow;
         await _unitOfWork.SaveChangesAsync();
         return CartOperationResult.Success("Urun sepete eklendi.");
     }
 
     public async Task<CartOperationResult> UpdateQuantityAsync(int userId, int productId, int quantity)
     {
-        var cartItem = await _cartRepository.GetByUserAndProductAsync(userId, productId);
+        var cart = await _cartRepository.GetTrackedByUserIdAsync(userId);
+        if (cart == null)
+            return CartOperationResult.Failure("Sepet urunu bulunamadi.");
+
+        var cartItem = cart.Items.FirstOrDefault(i => i.ProductId == productId);
         if (cartItem == null)
             return CartOperationResult.Failure("Sepet urunu bulunamadi.");
 
         if (quantity <= 0)
         {
-            _cartRepository.Remove(cartItem);
+            RemoveCartItemOrCart(cart, cartItem);
             await _unitOfWork.SaveChangesAsync();
             return CartOperationResult.Success("Urun sepetten kaldirildi.");
         }
@@ -87,6 +92,7 @@ public class CartService : ICartService
 
         cartItem.Quantity = quantity;
         cartItem.UpdatedDate = DateTime.UtcNow;
+        cart.UpdatedDate = DateTime.UtcNow;
 
         await _unitOfWork.SaveChangesAsync();
         return CartOperationResult.Success("Sepet guncellendi.");
@@ -94,19 +100,54 @@ public class CartService : ICartService
 
     public async Task<bool> RemoveFromCartAsync(int userId, int productId)
     {
-        var cartItem = await _cartRepository.GetByUserAndProductAsync(userId, productId);
+        var cart = await _cartRepository.GetTrackedByUserIdAsync(userId);
+        if (cart == null)
+            return false;
+
+        var cartItem = cart.Items.FirstOrDefault(i => i.ProductId == productId);
         if (cartItem == null)
             return false;
 
-        _cartRepository.Remove(cartItem);
+        RemoveCartItemOrCart(cart, cartItem);
         await _unitOfWork.SaveChangesAsync();
         return true;
     }
 
     public async Task ClearCartAsync(int userId)
     {
-        var cartItems = await _cartRepository.GetTrackedByUserIdAsync(userId);
-        _cartRepository.RemoveRange(cartItems);
+        var cart = await _cartRepository.GetTrackedByUserIdAsync(userId);
+        if (cart == null)
+            return;
+
+        _cartRepository.Remove(cart);
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    private async Task<Cart> GetOrCreateTrackedCartAsync(int userId)
+    {
+        var cart = await _cartRepository.GetTrackedByUserIdAsync(userId);
+        if (cart != null)
+            return cart;
+
+        cart = new Cart
+        {
+            UserId = userId,
+            CreatedDate = DateTime.UtcNow
+        };
+
+        await _cartRepository.AddAsync(cart);
+        return cart;
+    }
+
+    private void RemoveCartItemOrCart(Cart cart, CartItem cartItem)
+    {
+        if (cart.Items.Count <= 1)
+        {
+            _cartRepository.Remove(cart);
+            return;
+        }
+
+        _cartRepository.RemoveItem(cartItem);
+        cart.UpdatedDate = DateTime.UtcNow;
     }
 }

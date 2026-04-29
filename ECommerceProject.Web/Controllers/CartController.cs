@@ -1,5 +1,6 @@
 using ECommerceProject.Business.Models.Carts;
 using ECommerceProject.Business.Services.Abstract;
+using ECommerceProject.Entity.Concrete;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -130,7 +131,8 @@ public class CartController : BaseController
         int productId,
         CartOperationResult result)
     {
-        var cartItems = await _cartService.GetUserCartAsync(userId);
+        var cart = await _cartService.GetUserCartAsync(userId);
+        var cartItems = cart?.Items ?? new List<CartItem>();
         var cartItem = cartItems.FirstOrDefault(item => item.ProductId == productId);
         var cartTotal = cartItems
             .Where(item => item.Product != null)

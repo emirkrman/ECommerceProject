@@ -8,9 +8,5 @@ public class Cart : BaseEntity
 
     public AppUser? User { get; set; }
 
-    public int ProductId { get; set; }
-
-    public Product? Product { get; set; }
-
-    public int Quantity { get; set; } = 1;
+    public List<CartItem> Items { get; set; } = new();
 }
