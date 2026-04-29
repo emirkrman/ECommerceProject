@@ -88,7 +88,7 @@
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="productId" value="@Model.Id" />
                                 <input type="hidden" name="returnUrl" value="@returnUrl" />
-                                <input type="number" name="quantity" value="1" min="1" max="@Model.Stock"
+                                <input type="number" name="quantity" value="1" min="1"
                                        class="form-control add-cart-quantity" />
                                 <button type="submit" class="btn btn-dark btn-lg flex-grow-1">Sepete Ekle</button>
                             </form>

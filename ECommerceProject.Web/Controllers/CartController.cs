@@ -1,3 +1,4 @@
+using ECommerceProject.Business.Models.Carts;
 using ECommerceProject.Business.Services.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -50,6 +51,10 @@ public class CartController : BaseController
             return Challenge();
 
         var result = await _cartService.UpdateQuantityAsync(userId.Value, productId, quantity);
+
+        if (IsAjaxRequest())
+            return await CartJsonResultAsync(userId.Value, productId, result);
+
         SetCartMessage(result.Succeeded, result.Message);
 
         return RedirectToAction(nameof(Index));
@@ -63,7 +68,18 @@ public class CartController : BaseController
         if (!userId.HasValue)
             return Challenge();
 
-        if (await _cartService.RemoveFromCartAsync(userId.Value, productId))
+        var removed = await _cartService.RemoveFromCartAsync(userId.Value, productId);
+
+        if (IsAjaxRequest())
+        {
+            var result = removed
+                ? CartOperationResult.Success("Urun sepetten kaldirildi.")
+                : CartOperationResult.Failure("Sepet urunu bulunamadi.");
+
+            return await CartJsonResultAsync(userId.Value, productId, result);
+        }
+
+        if (removed)
             TempData["CartSuccess"] = "Urun sepetten kaldirildi.";
 
         return RedirectToAction(nameof(Index));
@@ -78,6 +94,19 @@ public class CartController : BaseController
             return Challenge();
 
         await _cartService.ClearCartAsync(userId.Value);
+
+        if (IsAjaxRequest())
+        {
+            return Json(new
+            {
+                succeeded = true,
+                message = "Sepet temizlendi.",
+                messageType = "success",
+                cartTotal = 0m.ToString("C"),
+                isEmpty = true
+            });
+        }
+
         TempData["CartSuccess"] = "Sepet temizlendi.";
 
         return RedirectToAction(nameof(Index));
@@ -89,5 +118,37 @@ public class CartController : BaseController
             return;
 
         TempData[succeeded ? "CartSuccess" : "CartError"] = message;
+    }
+
+    private bool IsAjaxRequest()
+    {
+        return Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+    }
+
+    private async Task<IActionResult> CartJsonResultAsync(
+        int userId,
+        int productId,
+        CartOperationResult result)
+    {
+        var cartItems = await _cartService.GetUserCartAsync(userId);
+        var cartItem = cartItems.FirstOrDefault(item => item.ProductId == productId);
+        var cartTotal = cartItems
+            .Where(item => item.Product != null)
+            .Sum(item => item.Product!.Price * item.Quantity);
+
+        return Json(new
+        {
+            succeeded = result.Succeeded,
+            message = result.Message,
+            messageType = result.Succeeded ? "success" : "danger",
+            productId,
+            removed = cartItem == null,
+            quantity = cartItem?.Quantity ?? 0,
+            itemSubtotal = cartItem?.Product == null
+                ? 0m.ToString("C")
+                : (cartItem.Product.Price * cartItem.Quantity).ToString("C"),
+            cartTotal = cartTotal.ToString("C"),
+            isEmpty = !cartItems.Any()
+        });
     }
 }
