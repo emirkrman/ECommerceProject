@@ -16,6 +16,7 @@
     var fullStars = ratingValue.HasValue ? (int)Math.Floor(ratingValue.Value) : 0;
     var hasHalfStar = ratingValue.HasValue && ratingValue.Value - fullStars >= 0.5m;
     var emptyStars = ratingValue.HasValue ? 5 - fullStars - (hasHalfStar ? 1 : 0) : 5;
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
 }
 
 <div class="container py-4 py-lg-5">
@@ -76,6 +77,41 @@
                         <p class="text-muted mb-0">@descriptionText</p>
                     </div>
 
+                    <div class="mb-4">
+                        @if (Model.Stock <= 0)
+                        {
+                            <button type="button" class="btn btn-secondary btn-lg w-100" disabled>Stokta Yok</button>
+                        }
+                        else if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex gap-2 flex-wrap">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productId" value="@Model.Id" />
+                                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                <input type="number" name="quantity" value="1" min="1" max="@Model.Stock"
+                                       class="form-control add-cart-quantity" />
+                                <button type="submit" class="btn btn-dark btn-lg flex-grow-1">Sepete Ekle</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@returnUrl"
+                               class="btn btn-dark btn-lg w-100">
+                                Sepete Ekle
+                            </a>
+                        }
+                    </div>
+
+                    @if (TempData["CartSuccess"] is string successMessage)
+                    {
+                        <div class="alert alert-success">@successMessage</div>
+                    }
+
+                    @if (TempData["CartError"] is string errorMessage)
+                    {
+                        <div class="alert alert-danger">@errorMessage</div>
+                    }
+
                     <div class="product-meta border-top pt-4">
                         <div class="meta-label">Kategori</div>
                         <div class="meta-value">@categoryText</div>
@@ -122,5 +158,9 @@
     .meta-value {
         font-weight: 600;
         color: #212529;
+    }
+
+    .add-cart-quantity {
+        max-width: 110px;
     }
 </style>

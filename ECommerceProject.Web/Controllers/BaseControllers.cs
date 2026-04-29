@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using ECommerceProject.Business.Services.Abstract;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -18,5 +19,11 @@ public class BaseController : Controller
         ViewBag.NavCategories = await _navigationService.GetNavigationCategoriesAsync();
 
         await next();
+    }
+
+    protected int? GetCurrentUserId()
+    {
+        var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(userIdValue, out var userId) ? userId : null;
     }
 }

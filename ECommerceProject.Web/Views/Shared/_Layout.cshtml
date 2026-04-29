@@ -25,32 +25,55 @@
                 <form asp-controller="Product" asp-action="List" method="get"
                       class="position-absolute start-50 translate-middle-x w-50">
                     <div class="input-group">
-                        <input type="text" name="search" class="form-control" placeholder="Ürün ara..." />
+                        <input type="text" name="search" class="form-control" placeholder="&#220;r&#252;n ara..." />
                         <button class="btn btn-light" type="submit">Ara</button>
                     </div>
                 </form>
 
                 <div class="d-flex align-items-center gap-2">
-                    @if (User.IsInRole(AppRoles.Admin))
-                    {
-                        <a class="btn btn-outline-light btn-sm" asp-controller="Home" asp-action="Admin">
-                            Admin
-                        </a>
-                    }
+                    <a class="btn btn-outline-light btn-sm" asp-controller="Cart" asp-action="Index">Sepetim</a>
 
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
-                        <span class="text-white-50 small">Merhaba, @User.Identity.Name</span>
-                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-outline-light btn-sm">Çıkış</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <a class="btn btn-outline-light btn-sm" asp-controller="Account" asp-action="Login">Giriş</a>
-                        <a class="btn btn-light btn-sm" asp-controller="Account" asp-action="Register">Kayıt Ol</a>
-                    }
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="accountDropdown"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            Hesab&#305;m
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <li>
+                                    <span class="dropdown-item-text small text-muted">
+                                        Merhaba, @User.Identity.Name
+                                    </span>
+                                </li>
+                                <li><hr class="dropdown-divider" /></li>
+
+                                @if (User.IsInRole(AppRoles.Admin))
+                                {
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Home" asp-action="Admin">Admin Paneli</a>
+                                    </li>
+                                }
+
+                                <li>
+                                    <form asp-controller="Account" asp-action="Logout" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="dropdown-item">&#199;&#305;k&#305;&#351;</button>
+                                    </form>
+                                </li>
+                            }
+                            else
+                            {
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Account" asp-action="Login">Giri&#351;</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Account" asp-action="Register">Kay&#305;t Ol</a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
                 </div>
             </div>
         </nav>

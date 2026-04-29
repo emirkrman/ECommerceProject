@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<AppUser> Users => Set<AppUser>();
+    public DbSet<Cart> Carts => Set<Cart>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,6 +47,21 @@ public class AppDbContext : DbContext
             .HasMaxLength(30);
 
         appUser.HasIndex(u => u.Email)
+            .IsUnique();
+
+        var cart = modelBuilder.Entity<Cart>();
+
+        cart.HasOne(c => c.User)
+            .WithMany()
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        cart.HasOne(c => c.Product)
+            .WithMany()
+            .HasForeignKey(c => c.ProductId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        cart.HasIndex(c => new { c.UserId, c.ProductId })
             .IsUnique();
     }
 }
