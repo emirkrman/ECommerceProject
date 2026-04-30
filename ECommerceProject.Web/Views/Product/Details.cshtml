@@ -1,18 +1,19 @@
-@model ECommerceProject.Entity.Concrete.Product
+@model ECommerceProject.Web.ViewModels.Products.ProductDetailsViewModel
 
 @{
-    ViewData["Title"] = Model.Name;
-    var category = Model.Category;
+    var product = Model.Product;
+    ViewData["Title"] = product.Name;
+    var category = product.Category;
     var parentCategory = category?.ParentCategory;
     var categoryText = parentCategory != null && category != null
         ? $"{parentCategory.Name} / {category.Name}"
         : category?.Name ?? "Kategori belirtilmemiş";
-    var descriptionText = string.IsNullOrWhiteSpace(Model.Description)
+    var descriptionText = string.IsNullOrWhiteSpace(product.Description)
         ? "Bu ürün için henüz açıklama eklenmemiş."
-        : Model.Description;
-    var stockText = Model.Stock > 0 ? "Stokta var" : "Stokta yok";
-    var stockBadgeClass = Model.Stock > 0 ? "text-bg-success" : "text-bg-secondary";
-    var ratingValue = Model.Rating;
+        : product.Description;
+    var stockText = Model.AvailableStock > 0 ? "Stokta var" : "Stokta yok";
+    var stockBadgeClass = Model.AvailableStock > 0 ? "text-bg-success" : "text-bg-secondary";
+    var ratingValue = product.Rating;
     var fullStars = ratingValue.HasValue ? (int)Math.Floor(ratingValue.Value) : 0;
     var hasHalfStar = ratingValue.HasValue && ratingValue.Value - fullStars >= 0.5m;
     var emptyStars = ratingValue.HasValue ? 5 - fullStars - (hasHalfStar ? 1 : 0) : 5;
@@ -23,8 +24,8 @@
     <div class="row g-4 align-items-start">
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm overflow-hidden">
-                <img src="@(string.IsNullOrWhiteSpace(Model.ImageUrl) ? "https://placehold.co/900x700?text=Product" : Model.ImageUrl)"
-                     alt="@Model.Name" class="img-fluid product-detail-image" />
+                <img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "https://placehold.co/900x700?text=Product" : product.ImageUrl)"
+                     alt="@product.Name" class="img-fluid product-detail-image" />
             </div>
         </div>
 
@@ -33,10 +34,10 @@
                 <div class="card-body p-4 p-lg-5">
                     <div class="text-muted small text-uppercase fw-semibold mb-2">@categoryText</div>
 
-                    <h1 class="display-6 fw-bold mb-3">@Model.Name</h1>
+                    <h1 class="display-6 fw-bold mb-3">@product.Name</h1>
 
                     <div class="d-flex align-items-center gap-3 flex-wrap mb-4">
-                        <div class="fs-3 fw-bold">@Model.Price.ToString("C")</div>
+                        <div class="fs-3 fw-bold">@product.Price.ToString("C")</div>
                         <span class="badge rounded-pill @stockBadgeClass px-3 py-2">@stockText</span>
                     </div>
 
@@ -78,7 +79,7 @@
                     </div>
 
                     <div class="mb-4">
-                        @if (Model.Stock <= 0)
+                        @if (Model.AvailableStock <= 0)
                         {
                             <button type="button" class="btn btn-secondary btn-lg w-100" disabled>Stokta Yok</button>
                         }
@@ -86,9 +87,9 @@
                         {
                             <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex gap-2 flex-wrap">
                                 @Html.AntiForgeryToken()
-                                <input type="hidden" name="productId" value="@Model.Id" />
+                                <input type="hidden" name="productId" value="@product.Id" />
                                 <input type="hidden" name="returnUrl" value="@returnUrl" />
-                                <input type="number" name="quantity" value="1" min="1"
+                                <input type="number" name="quantity" value="1" min="1" max="@Model.AvailableStock"
                                        class="form-control add-cart-quantity" />
                                 <button type="submit" class="btn btn-dark btn-lg flex-grow-1">Sepete Ekle</button>
                             </form>

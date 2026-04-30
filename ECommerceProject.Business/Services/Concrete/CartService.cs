@@ -27,6 +27,7 @@ public class CartService : ICartService
 
     public async Task<Cart?> GetUserCartAsync(int userId)
     {
+        await RefreshCartReservationsAsync(userId);
         return await _cartRepository.GetByUserIdAsync(userId);
     }
 
@@ -44,6 +45,7 @@ public class CartService : ICartService
 
         var cart = await GetOrCreateTrackedCartAsync(userId);
         var cartItem = cart.Items.FirstOrDefault(i => i.ProductId == productId);
+        var previousQuantity = cartItem?.Quantity ?? 0;
         var newQuantity = quantity + (cartItem?.Quantity ?? 0);
 
         var reserved = await _stockReservationService.TryReserveAsync(userId, productId, newQuantity, product.Stock);
@@ -66,7 +68,8 @@ public class CartService : ICartService
         }
 
         cart.UpdatedDate = DateTime.UtcNow;
-        await _unitOfWork.SaveChangesAsync();
+        await SaveChangesOrRestoreReservationAsync(userId, productId, previousQuantity, product.Stock);
+
         return CartOperationResult.Success("Urun sepete eklendi.");
     }
 
@@ -92,6 +95,7 @@ public class CartService : ICartService
         if (product == null)
             return CartOperationResult.Failure("Urun bulunamadi.");
 
+        var previousQuantity = cartItem.Quantity;
         var reserved = await _stockReservationService.TryReserveAsync(userId, productId, quantity, product.Stock);
         if (!reserved)
             return CartOperationResult.Failure("Secilen adet urun stok miktarini asiyor.");
@@ -100,7 +104,8 @@ public class CartService : ICartService
         cartItem.UpdatedDate = DateTime.UtcNow;
         cart.UpdatedDate = DateTime.UtcNow;
 
-        await _unitOfWork.SaveChangesAsync();
+        await SaveChangesOrRestoreReservationAsync(userId, productId, previousQuantity, product.Stock);
+
         return CartOperationResult.Success("Sepet guncellendi.");
     }
 
@@ -149,15 +154,91 @@ public class CartService : ICartService
         return cart;
     }
 
+    private async Task RefreshCartReservationsAsync(int userId)
+    {
+        var cart = await _cartRepository.GetTrackedByUserIdAsync(userId);
+        if (cart == null)
+            return;
+
+        var expiredOrUnavailableItems = new List<CartItem>();
+
+        foreach (var cartItem in cart.Items.ToList())
+        {
+            var product = await _productRepository.GetActiveDetailsAsync(cartItem.ProductId);
+            if (product == null || product.Stock <= 0)
+            {
+                expiredOrUnavailableItems.Add(cartItem);
+                continue;
+            }
+
+            var reserved = await _stockReservationService.TryReserveAsync(
+                userId,
+                cartItem.ProductId,
+                cartItem.Quantity,
+                product.Stock);
+
+            if (!reserved)
+            {
+                expiredOrUnavailableItems.Add(cartItem);
+            }
+        }
+
+        if (!expiredOrUnavailableItems.Any())
+            return;
+
+        var productIds = expiredOrUnavailableItems.Select(item => item.ProductId).ToList();
+        RemoveCartItems(cart, expiredOrUnavailableItems);
+        await _unitOfWork.SaveChangesAsync();
+        await _stockReservationService.ReleaseManyAsync(userId, productIds);
+    }
+
+    private async Task RestoreReservationAsync(int userId, int productId, int previousQuantity, int actualStock)
+    {
+        if (previousQuantity <= 0)
+        {
+            await _stockReservationService.ReleaseAsync(userId, productId);
+            return;
+        }
+
+        await _stockReservationService.TryReserveAsync(userId, productId, previousQuantity, actualStock);
+    }
+
+    private async Task SaveChangesOrRestoreReservationAsync(
+        int userId,
+        int productId,
+        int previousQuantity,
+        int actualStock)
+    {
+        try
+        {
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch
+        {
+            await RestoreReservationAsync(userId, productId, previousQuantity, actualStock);
+            throw;
+        }
+    }
+
     private void RemoveCartItemOrCart(Cart cart, CartItem cartItem)
     {
-        if (cart.Items.Count <= 1)
+        RemoveCartItems(cart, [cartItem]);
+    }
+
+    private void RemoveCartItems(Cart cart, IReadOnlyCollection<CartItem> cartItems)
+    {
+        if (cartItems.Count >= cart.Items.Count)
         {
             _cartRepository.Remove(cart);
             return;
         }
 
-        _cartRepository.RemoveItem(cartItem);
+        foreach (var cartItem in cartItems)
+        {
+            _cartRepository.RemoveItem(cartItem);
+            cart.Items.Remove(cartItem);
+        }
+
         cart.UpdatedDate = DateTime.UtcNow;
     }
 }

@@ -31,13 +31,6 @@ public class CartRepository : ICartRepository
             .FirstOrDefaultAsync(c => c.UserId == userId);
     }
 
-    public async Task<CartItem?> GetItemByUserAndProductAsync(int userId, int productId)
-    {
-        return await _context.CartItems
-            .Include(i => i.Cart)
-            .FirstOrDefaultAsync(i => i.Cart != null && i.Cart.UserId == userId && i.ProductId == productId);
-    }
-
     public async Task AddAsync(Cart cart)
     {
         await _context.Carts.AddAsync(cart);
@@ -51,10 +44,5 @@ public class CartRepository : ICartRepository
     public void RemoveItem(CartItem cartItem)
     {
         _context.CartItems.Remove(cartItem);
-    }
-
-    public void RemoveItems(IEnumerable<CartItem> cartItems)
-    {
-        _context.CartItems.RemoveRange(cartItems);
     }
 }

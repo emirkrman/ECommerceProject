@@ -8,7 +8,7 @@ namespace ECommerceProject.Business.Services.Abstract;
 public interface IProductService
 {
     Task<ProductListResult> GetPublicListAsync(int? categoryId, string? search, string? sort, int page);
-    Task<Product?> GetActiveDetailsAsync(int id);
+    Task<ProductDetailsResult?> GetPublicDetailsAsync(int id);
     Task<List<Product>> GetAdminListAsync(string? sort);
     Task<List<Product>> GetLatestActiveProductsAsync(int count);
     Task<List<Category>> GetActiveCategoriesAsync();

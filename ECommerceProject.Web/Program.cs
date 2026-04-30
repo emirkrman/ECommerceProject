@@ -1,5 +1,6 @@
 using ECommerceProject.Business.Services.Abstract;
 using ECommerceProject.Business.Services.Concrete;
+using ECommerceProject.Business.Options;
 using ECommerceProject.Data.Context;
 using ECommerceProject.Data.Repositories.Abstract;
 using ECommerceProject.Data.Repositories.Concrete;
@@ -9,12 +10,13 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
-
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddAutoMapper(_ => { }, typeof(AutoMapperProfile).Assembly);
+builder.Services.Configure<StockReservationOptions>(
+    builder.Configuration.GetSection("StockReservation"));
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>

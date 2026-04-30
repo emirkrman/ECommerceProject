@@ -15,17 +15,20 @@ public class ProductService : IProductService
     private readonly IProductRepository _productRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IImageService _imageService;
+    private readonly IStockReservationService _stockReservationService;
     private readonly IUnitOfWork _unitOfWork;
 
     public ProductService(
         IProductRepository productRepository,
         ICategoryRepository categoryRepository,
         IImageService imageService,
+        IStockReservationService stockReservationService,
         IUnitOfWork unitOfWork)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
         _imageService = imageService;
+        _stockReservationService = stockReservationService;
         _unitOfWork = unitOfWork;
     }
 
@@ -57,9 +60,17 @@ public class ProductService : IProductService
         };
     }
 
-    public async Task<Product?> GetActiveDetailsAsync(int id)
+    public async Task<ProductDetailsResult?> GetPublicDetailsAsync(int id)
     {
-        return await _productRepository.GetActiveDetailsAsync(id);
+        var product = await _productRepository.GetActiveDetailsAsync(id);
+        if (product == null)
+            return null;
+
+        return new ProductDetailsResult
+        {
+            Product = product,
+            AvailableStock = await _stockReservationService.GetAvailableStockAsync(product.Id, product.Stock)
+        };
     }
 
     public async Task<List<Product>> GetAdminListAsync(string? sort)
@@ -95,10 +106,19 @@ public class ProductService : IProductService
 
     public async Task CreateAsync(ProductFormData formData)
     {
-        var entity = CreateProductEntity(formData, await _imageService.SaveProductImageAsync(formData.ImageFile));
+        var imageUrl = await _imageService.SaveProductImageAsync(formData.ImageFile);
+        var entity = CreateProductEntity(formData, imageUrl);
 
-        await _productRepository.AddAsync(entity);
-        await _unitOfWork.SaveChangesAsync();
+        try
+        {
+            await _productRepository.AddAsync(entity);
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch
+        {
+            _imageService.DeleteProductImage(imageUrl);
+            throw;
+        }
     }
 
     public async Task<bool> UpdateAsync(int id, ProductFormData formData)
@@ -109,14 +129,26 @@ public class ProductService : IProductService
 
         ApplyFormValues(entity, formData);
 
+        string? oldImageUrl = null;
+        string? newImageUrl = null;
         if (formData.ImageFile != null)
         {
-            var oldImageUrl = entity.ImageUrl;
-            entity.ImageUrl = await _imageService.SaveProductImageAsync(formData.ImageFile);
-            _imageService.DeleteProductImage(oldImageUrl);
+            oldImageUrl = entity.ImageUrl;
+            newImageUrl = await _imageService.SaveProductImageAsync(formData.ImageFile);
+            entity.ImageUrl = newImageUrl;
         }
 
-        await _unitOfWork.SaveChangesAsync();
+        try
+        {
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch
+        {
+            _imageService.DeleteProductImage(newImageUrl);
+            throw;
+        }
+
+        _imageService.DeleteProductImage(oldImageUrl);
         return true;
     }
 
@@ -126,9 +158,10 @@ public class ProductService : IProductService
         if (product == null)
             return false;
 
-        _imageService.DeleteProductImage(product.ImageUrl);
+        var imageUrl = product.ImageUrl;
         _productRepository.Remove(product);
         await _unitOfWork.SaveChangesAsync();
+        _imageService.DeleteProductImage(imageUrl);
         return true;
     }
 

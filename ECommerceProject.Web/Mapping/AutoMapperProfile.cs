@@ -17,6 +17,7 @@ public class AutoMapperProfile : Profile
             .ForMember(destination => destination.ListedProducts,
                 options => options.MapFrom(source => source.Products));
 
+        CreateMap<ProductDetailsResult, ProductDetailsViewModel>();
         CreateMap<ProductFormViewModel, ProductFormData>();
         CreateMap<ProductFormData, ProductFormViewModel>();
     }

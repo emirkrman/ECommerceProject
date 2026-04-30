@@ -38,8 +38,8 @@ public class ProductController : BaseController
     [AllowAnonymous]
     public async Task<IActionResult> Details(int id)
     {
-        var product = await _productService.GetActiveDetailsAsync(id);
-        return product == null ? NotFound() : View(product);
+        var details = await _productService.GetPublicDetailsAsync(id);
+        return details == null ? NotFound() : View(_mapper.Map<ProductDetailsViewModel>(details));
     }
 
     public async Task<IActionResult> Index(string? sort = null)

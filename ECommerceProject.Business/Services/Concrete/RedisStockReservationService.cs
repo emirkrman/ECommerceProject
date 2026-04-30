@@ -1,12 +1,12 @@
+using ECommerceProject.Business.Options;
 using ECommerceProject.Business.Services.Abstract;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace ECommerceProject.Business.Services.Concrete;
 
 public class RedisStockReservationService : IStockReservationService
 {
-    private static readonly TimeSpan ReservationDuration = TimeSpan.FromMinutes(15);
-
     private const string ReserveScript = """
         local quantity = tonumber(ARGV[1])
         local actualStock = tonumber(ARGV[2])
@@ -70,16 +70,20 @@ public class RedisStockReservationService : IStockReservationService
         """;
 
     private readonly IConnectionMultiplexer _redis;
+    private readonly StockReservationOptions _options;
 
-    public RedisStockReservationService(IConnectionMultiplexer redis)
+    public RedisStockReservationService(
+        IConnectionMultiplexer redis,
+        IOptions<StockReservationOptions> options)
     {
         _redis = redis;
+        _options = options.Value;
     }
 
     public async Task<bool> TryReserveAsync(int userId, int productId, int quantity, int actualStock)
     {
         var now = DateTimeOffset.UtcNow;
-        var expireAt = now.Add(ReservationDuration);
+        var expireAt = now.Add(GetReservationDuration());
         var database = _redis.GetDatabase();
 
         var result = await database.ScriptEvaluateAsync(
@@ -113,7 +117,7 @@ public class RedisStockReservationService : IStockReservationService
         }
     }
 
-    public async Task<int> GetReservedQuantityAsync(int productId)
+    private async Task<int> GetReservedQuantityAsync(int productId)
     {
         var database = _redis.GetDatabase();
         var result = await database.ScriptEvaluateAsync(
@@ -143,5 +147,10 @@ public class RedisStockReservationService : IStockReservationService
     private static RedisValue UserField(int userId)
     {
         return userId.ToString();
+    }
+
+    private TimeSpan GetReservationDuration()
+    {
+        return TimeSpan.FromMinutes(Math.Max(1, _options.DurationMinutes));
     }
 }
