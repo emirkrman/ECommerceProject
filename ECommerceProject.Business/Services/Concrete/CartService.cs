@@ -10,15 +10,18 @@ public class CartService : ICartService
 {
     private readonly ICartRepository _cartRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IStockReservationService _stockReservationService;
     private readonly IUnitOfWork _unitOfWork;
 
     public CartService(
         ICartRepository cartRepository,
         IProductRepository productRepository,
+        IStockReservationService stockReservationService,
         IUnitOfWork unitOfWork)
     {
         _cartRepository = cartRepository;
         _productRepository = productRepository;
+        _stockReservationService = stockReservationService;
         _unitOfWork = unitOfWork;
     }
 
@@ -43,7 +46,8 @@ public class CartService : ICartService
         var cartItem = cart.Items.FirstOrDefault(i => i.ProductId == productId);
         var newQuantity = quantity + (cartItem?.Quantity ?? 0);
 
-        if (newQuantity > product.Stock)
+        var reserved = await _stockReservationService.TryReserveAsync(userId, productId, newQuantity, product.Stock);
+        if (!reserved)
             return CartOperationResult.Failure("Secilen adet urun stok miktarini asiyor.");
 
         if (cartItem == null)
@@ -80,6 +84,7 @@ public class CartService : ICartService
         {
             RemoveCartItemOrCart(cart, cartItem);
             await _unitOfWork.SaveChangesAsync();
+            await _stockReservationService.ReleaseAsync(userId, productId);
             return CartOperationResult.Success("Urun sepetten kaldirildi.");
         }
 
@@ -87,7 +92,8 @@ public class CartService : ICartService
         if (product == null)
             return CartOperationResult.Failure("Urun bulunamadi.");
 
-        if (quantity > product.Stock)
+        var reserved = await _stockReservationService.TryReserveAsync(userId, productId, quantity, product.Stock);
+        if (!reserved)
             return CartOperationResult.Failure("Secilen adet urun stok miktarini asiyor.");
 
         cartItem.Quantity = quantity;
@@ -110,6 +116,7 @@ public class CartService : ICartService
 
         RemoveCartItemOrCart(cart, cartItem);
         await _unitOfWork.SaveChangesAsync();
+        await _stockReservationService.ReleaseAsync(userId, productId);
         return true;
     }
 
@@ -119,8 +126,11 @@ public class CartService : ICartService
         if (cart == null)
             return;
 
+        var productIds = cart.Items.Select(item => item.ProductId).ToList();
+
         _cartRepository.Remove(cart);
         await _unitOfWork.SaveChangesAsync();
+        await _stockReservationService.ReleaseManyAsync(userId, productIds);
     }
 
     private async Task<Cart> GetOrCreateTrackedCartAsync(int userId)

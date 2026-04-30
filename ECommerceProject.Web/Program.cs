@@ -7,6 +7,8 @@ using ECommerceProject.Data.UnitOfWork;
 using ECommerceProject.Web.Mapping;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
+
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
@@ -15,6 +17,15 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddAutoMapper(_ => { }, typeof(AutoMapperProfile).Assembly);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+{
+    var connectionString = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379";
+    var options = ConfigurationOptions.Parse(connectionString);
+    options.AbortOnConnectFail = false;
+
+    return ConnectionMultiplexer.Connect(options);
+});
+
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -24,6 +35,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IStockReservationService, RedisStockReservationService>();
 builder.Services.AddScoped<INavigationService, NavigationService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
