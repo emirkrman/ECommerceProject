@@ -69,14 +69,14 @@ public class RedisStockReservationService : IStockReservationService
         return reserved
         """;
 
-    private readonly IConnectionMultiplexer _redis;
+    private readonly IDatabase _database;
     private readonly StockReservationOptions _options;
 
     public RedisStockReservationService(
         IConnectionMultiplexer redis,
         IOptions<StockReservationOptions> options)
     {
-        _redis = redis;
+        _database = redis.GetDatabase();
         _options = options.Value;
     }
 
@@ -84,9 +84,8 @@ public class RedisStockReservationService : IStockReservationService
     {
         var now = DateTimeOffset.UtcNow;
         var expireAt = now.Add(GetReservationDuration());
-        var database = _redis.GetDatabase();
 
-        var result = await database.ScriptEvaluateAsync(
+        var result = await _database.ScriptEvaluateAsync(
             ReserveScript,
             [QuantitiesKey(productId), ExpirationsKey(productId)],
             [
@@ -102,11 +101,10 @@ public class RedisStockReservationService : IStockReservationService
 
     public async Task ReleaseAsync(int userId, int productId)
     {
-        var database = _redis.GetDatabase();
         var userField = UserField(userId);
 
-        await database.HashDeleteAsync(QuantitiesKey(productId), userField);
-        await database.SortedSetRemoveAsync(ExpirationsKey(productId), userField);
+        await _database.HashDeleteAsync(QuantitiesKey(productId), userField);
+        await _database.SortedSetRemoveAsync(ExpirationsKey(productId), userField);
     }
 
     public async Task ReleaseManyAsync(int userId, IEnumerable<int> productIds)
@@ -119,8 +117,7 @@ public class RedisStockReservationService : IStockReservationService
 
     private async Task<int> GetReservedQuantityAsync(int productId)
     {
-        var database = _redis.GetDatabase();
-        var result = await database.ScriptEvaluateAsync(
+        var result = await _database.ScriptEvaluateAsync(
             CleanupAndSumScript,
             [QuantitiesKey(productId), ExpirationsKey(productId)],
             [DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()]);
