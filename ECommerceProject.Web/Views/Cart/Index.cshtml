@@ -12,7 +12,7 @@
     <div class="d-flex justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h2 class="mb-1">Sepetim</h2>
-            <p class="text-muted mb-0">Sepetinizdeki urunleri buradan yonetebilirsiniz.</p>
+            <p class="text-muted mb-0">Sepetinizdeki ürünleri buradan yönetebilirsiniz.</p>
         </div>
 
         @if (cartItems.Any())
@@ -38,9 +38,9 @@
 
     <div id="cartEmptyState" class="card border-0 shadow-sm @(cartItems.Any() ? "d-none" : "")">
         <div class="card-body text-center py-5">
-            <h5>Sepetiniz bos</h5>
-            <p class="text-muted">Urunleri inceleyip sepetinize ekleyebilirsiniz.</p>
-            <a asp-controller="Product" asp-action="List" class="btn btn-dark">Urunlere Git</a>
+            <h5>Sepetiniz boş</h5>
+            <p class="text-muted">Ürünleri inceleyip sepetinize ekleyebilirsiniz.</p>
+            <a asp-controller="Product" asp-action="List" class="btn btn-dark">Ürünlere Git</a>
         </div>
     </div>
 
@@ -51,7 +51,7 @@
                     <table class="table align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>Urun</th>
+                                <th>Ürün</th>
                                 <th class="text-center">Adet</th>
                                 <th class="text-end">Ara Toplam</th>
                                 <th></th>
@@ -72,7 +72,7 @@
                                                 <a asp-controller="Product" asp-action="Details"
                                                        asp-route-id="@item.ProductId"
                                                        class="text-dark fw-semibold text-decoration-none">
-                                                    @(product?.Name ?? "Urun bulunamadi")
+                                                    @(product?.Name ?? "Ürün bulunamadı")
                                                 </a>
                                                 <div class="text-muted small">@product?.Category?.Name</div>
                                                 <div class="small">@((product?.Price ?? 0).ToString("C"))</div>
@@ -102,7 +102,7 @@
                                                 <input type="hidden" name="quantity" value="@(item.Quantity + 1)"
                                                        data-quantity-target="increase" />
                                                 <button type="submit" class="btn btn-outline-dark btn-sm quantity-button"
-                                                        aria-label="Adet artir">
+                                                        aria-label="Adet artır">
                                                     +
                                                 </button>
                                             </form>
@@ -113,7 +113,7 @@
                                         <form asp-action="Remove" method="post" class="js-cart-form js-cart-remove-form">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="productId" value="@item.ProductId" />
-                                            <button type="submit" class="btn btn-outline-danger btn-sm">Kaldir</button>
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">Kaldır</button>
                                         </form>
                                     </td>
                                 </tr>
@@ -127,9 +127,9 @@
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <h5 class="mb-3">Sepet Ozeti</h5>
+                    <h5 class="mb-3">Sepet Özeti</h5>
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Urun Toplami</span>
+                        <span class="text-muted">Ürün Toplamı</span>
                         <strong class="cart-total">@cartTotal.ToString("C")</strong>
                     </div>
                     <hr />
@@ -137,8 +137,7 @@
                         <span>Toplam</span>
                         <strong class="cart-total">@cartTotal.ToString("C")</strong>
                     </div>
-                    <button type="button" class="btn btn-dark w-100" disabled>Siparise Gec</button>
-                    <div class="text-muted small mt-2">Geliştirme aşamasında...</div>
+                    <a asp-controller="Checkout" asp-action="Index" class="btn btn-dark w-100">Siparişe Geç</a>
                 </div>
             </div>
         </div>
@@ -226,7 +225,7 @@
                         showEmptyCart();
                     }
                 } catch {
-                    showCartMessage('Sepet guncellenirken bir hata olustu.', 'danger');
+                    showCartMessage('Sepet güncellenirken bir hata oluştu.', 'danger');
                 } finally {
                     if (submitButton) {
                         submitButton.disabled = false;

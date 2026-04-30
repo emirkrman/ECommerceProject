@@ -4,26 +4,26 @@ namespace ECommerceProject.Web.ViewModels.Account;
 
 public class RegisterViewModel
 {
-    [Required(ErrorMessage = "Ad Soyad bos olamaz.")]
+    [Required(ErrorMessage = "Ad soyad boş olamaz.")]
     [StringLength(100, MinimumLength = 3)]
     [Display(Name = "Ad Soyad")]
     public string FullName { get; set; } = null!;
 
-    [Required(ErrorMessage = "E-posta bos olamaz.")]
+    [Required(ErrorMessage = "E-posta boş olamaz.")]
     [EmailAddress]
     [StringLength(150)]
     [Display(Name = "E-posta")]
     public string Email { get; set; } = null!;
 
-    [Required(ErrorMessage = "Sifre bos olamaz.")]
+    [Required(ErrorMessage = "Şifre boş olamaz.")]
     [StringLength(100, MinimumLength = 6)]
     [DataType(DataType.Password)]
-    [Display(Name = "Sifre")]
+    [Display(Name = "Şifre")]
     public string Password { get; set; } = null!;
 
-    [Required(ErrorMessage = "Sifre Tekrar bos olamaz.")]
+    [Required(ErrorMessage = "Şifre tekrarı boş olamaz.")]
     [DataType(DataType.Password)]
     [Compare(nameof(Password))]
-    [Display(Name = "Sifre Tekrar")]
+    [Display(Name = "Şifre Tekrar")]
     public string ConfirmPassword { get; set; } = null!;
 }

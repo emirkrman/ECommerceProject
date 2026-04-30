@@ -4,16 +4,16 @@ namespace ECommerceProject.Web.ViewModels.Account;
 
 public class LoginViewModel
 {
-    [Required(ErrorMessage = "E-posta bos olamaz.")]
+    [Required(ErrorMessage = "E-posta boş olamaz.")]
     [EmailAddress]
     [Display(Name = "E-posta")]
     public string Email { get; set; } = null!;
 
-    [Required(ErrorMessage = "Sifre bos olamaz.")]
+    [Required(ErrorMessage = "Şifre boş olamaz.")]
     [DataType(DataType.Password)]
-    [Display(Name = "Sifre")]
+    [Display(Name = "Şifre")]
     public string Password { get; set; } = null!;
 
-    [Display(Name = "Beni hatirla")]
+    [Display(Name = "Beni hatırla")]
     public bool RememberMe { get; set; }
 }

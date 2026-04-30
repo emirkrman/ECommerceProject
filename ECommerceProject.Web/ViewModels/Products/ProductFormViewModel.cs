@@ -7,7 +7,7 @@ public class ProductFormViewModel
 {
     public int Id { get; set; }
 
-    [Required(ErrorMessage = "Urun adi bos olamaz.")]
+    [Required(ErrorMessage = "Ürün adı boş olamaz.")]
     public string Name { get; set; } = null!;
 
     public string? Description { get; set; }

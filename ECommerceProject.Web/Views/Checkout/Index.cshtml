@@ -1,0 +1,291 @@
+@model ECommerceProject.Web.ViewModels.Checkout.CheckoutViewModel
+@using System.Text.Json
+
+@{
+    ViewData["Title"] = "Ödeme";
+    var jsonOptions = new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+}
+
+<div class="container py-4">
+    <div class="mb-4">
+        <h2 class="mb-1">Ödeme</h2>
+        <p class="text-muted mb-0">Sepetinizi kontrol edip teslimat ve kart bilgilerinizi girin.</p>
+    </div>
+
+    <form asp-action="Pay" method="post">
+        @Html.AntiForgeryToken()
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h5 class="mb-3">Teslimat Adresi</h5>
+
+                        @if (Model.SavedAddresses.Any())
+                        {
+                            <label asp-for="SelectedAddressId" class="form-label">Kayıtlı Adresler</label>
+                            <select asp-for="SelectedAddressId" class="form-select mb-3" data-address-select>
+                                <option value="">Yeni adres kullan</option>
+                                @foreach (var address in Model.SavedAddresses)
+                                {
+                                    <option value="@address.Id">
+                                        @address.Title - @address.City / @address.District
+                                    </option>
+                                }
+                            </select>
+                        }
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="AddressTitle" class="form-label"></label>
+                                <input asp-for="AddressTitle" class="form-control" placeholder="Ev, İş, Yazlık" data-address-title />
+                                <span asp-validation-for="AddressTitle" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="FullName" class="form-label"></label>
+                                <input asp-for="FullName" class="form-control" data-address-full-name />
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="PhoneNumber" class="form-label"></label>
+                                <input asp-for="PhoneNumber" class="form-control" data-address-phone-number />
+                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="City" class="form-label"></label>
+                                <input asp-for="City" class="form-control" data-address-city />
+                                <span asp-validation-for="City" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="District" class="form-label"></label>
+                                <input asp-for="District" class="form-control" data-address-district />
+                                <span asp-validation-for="District" class="text-danger"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="AddressLine" class="form-label"></label>
+                                <textarea asp-for="AddressLine" class="form-control" rows="3" data-address-line></textarea>
+                                <span asp-validation-for="AddressLine" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-3">Kart Bilgileri</h5>
+
+                        @if (Model.SavedCards.Any())
+                        {
+                            <label asp-for="SelectedCardId" class="form-label">Kayıtlı Kartlar</label>
+                            <select asp-for="SelectedCardId" class="form-select mb-3" data-card-select>
+                                <option value="">Yeni kart kullan</option>
+                                @foreach (var card in Model.SavedCards)
+                                {
+                                    <option value="@card.Id">
+                                        @card.CardHolderName - **** **** **** @card.CardLastFour
+                                    </option>
+                                }
+                            </select>
+                        }
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="CardHolderName" class="form-label"></label>
+                                <input asp-for="CardHolderName" class="form-control" data-card-holder-name />
+                                <span asp-validation-for="CardHolderName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="CardNumber" class="form-label"></label>
+                                <input asp-for="CardNumber"
+                                       class="form-control"
+                                       inputmode="numeric"
+                                       autocomplete="cc-number"
+                                       maxlength="19"
+                                       placeholder="4111-1111-1111-1111"
+                                       data-card-number />
+                                <span asp-validation-for="CardNumber" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-2">
+                                <label asp-for="ExpiryMonth" class="form-label"></label>
+                                <input asp-for="ExpiryMonth"
+                                       class="form-control"
+                                       inputmode="numeric"
+                                       autocomplete="cc-exp-month"
+                                       maxlength="2"
+                                       placeholder="12"
+                                       data-numeric-only
+                                       data-card-expiry-month />
+                                <span asp-validation-for="ExpiryMonth" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-2">
+                                <label asp-for="ExpiryYear" class="form-label"></label>
+                                <input asp-for="ExpiryYear"
+                                       class="form-control"
+                                       inputmode="numeric"
+                                       autocomplete="cc-exp-year"
+                                       maxlength="4"
+                                       placeholder="2030"
+                                       data-numeric-only
+                                       data-card-expiry-year />
+                                <span asp-validation-for="ExpiryYear" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-2">
+                                <label asp-for="Cvv" class="form-label"></label>
+                                <input asp-for="Cvv"
+                                       class="form-control"
+                                       inputmode="numeric"
+                                       autocomplete="cc-csc"
+                                       maxlength="3"
+                                       placeholder="123"
+                                       data-numeric-only
+                                       data-card-cvv />
+                                <span asp-validation-for="Cvv" class="text-danger"></span>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input asp-for="SaveCard" class="form-check-input" data-save-card />
+                                    <label asp-for="SaveCard" class="form-check-label"></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-3 mb-0">
+                            Mock ödemede kart numarası 0000 ile biterse veya CVV 000 olursa ödeme reddedilir.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-3">Sipariş Özeti</h5>
+
+                        @foreach (var item in Model.Items)
+                        {
+                            <div class="d-flex gap-3 mb-3">
+                                <img src="@(string.IsNullOrWhiteSpace(item.ImageUrl) ? "https://placehold.co/80x60?text=Product" : item.ImageUrl)"
+                                     alt="@item.ProductName"
+                                     class="checkout-image" />
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">@item.ProductName</div>
+                                    <div class="text-muted small">@item.Quantity x @item.UnitPrice.ToString("C")</div>
+                                </div>
+                                <div class="fw-semibold">@item.Subtotal.ToString("C")</div>
+                            </div>
+                        }
+
+                        <hr />
+                        <div class="d-flex justify-content-between fs-5 mb-3">
+                            <span>Toplam</span>
+                            <strong>@Model.CartTotal.ToString("C")</strong>
+                        </div>
+                        <button type="submit" class="btn btn-dark w-100">Ödemeyi Tamamla</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .checkout-image {
+        width: 64px;
+        height: 48px;
+        object-fit: cover;
+        border-radius: 0.5rem;
+        background: #f8f9fa;
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const savedAddresses = @Html.Raw(JsonSerializer.Serialize(Model.SavedAddresses, jsonOptions));
+        const savedCards = @Html.Raw(JsonSerializer.Serialize(Model.SavedCards, jsonOptions));
+
+        const setFieldValue = (field, value) => {
+            if (field) {
+                field.value = value ?? '';
+            }
+        };
+
+        const formatCardNumber = (value) => {
+            const digits = (value ?? '').replace(/\D/g, '').slice(0, 16);
+            return digits.match(/.{1,4}/g)?.join('-') ?? '';
+        };
+
+        const cardInput = document.querySelector('[data-card-number]');
+        cardInput?.addEventListener('input', () => {
+            cardInput.value = formatCardNumber(cardInput.value);
+        });
+
+        document.querySelectorAll('[data-numeric-only]').forEach((input) => {
+            input.addEventListener('input', () => {
+                const maxLength = Number.parseInt(input.getAttribute('maxlength') || '0', 10);
+                const digits = input.value.replace(/\D/g, '');
+                input.value = maxLength > 0 ? digits.slice(0, maxLength) : digits;
+            });
+        });
+
+        const addressSelect = document.querySelector('[data-address-select]');
+        const addressFields = {
+            title: document.querySelector('[data-address-title]'),
+            fullName: document.querySelector('[data-address-full-name]'),
+            phoneNumber: document.querySelector('[data-address-phone-number]'),
+            city: document.querySelector('[data-address-city]'),
+            district: document.querySelector('[data-address-district]'),
+            addressLine: document.querySelector('[data-address-line]')
+        };
+
+        const fillAddressFields = () => {
+            const address = savedAddresses.find((item) => String(item.id) === addressSelect?.value);
+
+            setFieldValue(addressFields.title, address?.title);
+            setFieldValue(addressFields.fullName, address?.fullName);
+            setFieldValue(addressFields.phoneNumber, address?.phoneNumber);
+            setFieldValue(addressFields.city, address?.city);
+            setFieldValue(addressFields.district, address?.district);
+            setFieldValue(addressFields.addressLine, address?.addressLine);
+        };
+
+        addressSelect?.addEventListener('change', fillAddressFields);
+
+        const cardSelect = document.querySelector('[data-card-select]');
+        const saveCardCheckbox = document.querySelector('[data-save-card]');
+        const cardFields = {
+            holderName: document.querySelector('[data-card-holder-name]'),
+            number: document.querySelector('[data-card-number]'),
+            expiryMonth: document.querySelector('[data-card-expiry-month]'),
+            expiryYear: document.querySelector('[data-card-expiry-year]'),
+            cvv: document.querySelector('[data-card-cvv]')
+        };
+
+        const fillCardFields = () => {
+            const card = savedCards.find((item) => String(item.id) === cardSelect?.value);
+
+            setFieldValue(cardFields.holderName, card?.cardHolderName);
+            setFieldValue(cardFields.number, formatCardNumber(card?.cardNumber));
+            setFieldValue(cardFields.expiryMonth, card?.expiryMonth);
+            setFieldValue(cardFields.expiryYear, card?.expiryYear);
+            setFieldValue(cardFields.cvv, card?.cvv);
+
+            if (saveCardCheckbox) {
+                saveCardCheckbox.checked = false;
+                saveCardCheckbox.disabled = Boolean(card);
+            }
+        };
+
+        cardSelect?.addEventListener('change', fillCardFields);
+
+        if (addressSelect?.value) {
+            fillAddressFields();
+        }
+
+        if (cardSelect?.value) {
+            fillCardFields();
+        }
+    </script>
+}

@@ -74,14 +74,14 @@ public class CartController : BaseController
         if (IsAjaxRequest())
         {
             var result = removed
-                ? CartOperationResult.Success("Urun sepetten kaldirildi.")
-                : CartOperationResult.Failure("Sepet urunu bulunamadi.");
+                ? CartOperationResult.Success("Ürün sepetten kaldırıldı.")
+                : CartOperationResult.Failure("Sepet ürünü bulunamadı.");
 
             return await CartJsonResultAsync(userId.Value, productId, result);
         }
 
         if (removed)
-            TempData["CartSuccess"] = "Urun sepetten kaldirildi.";
+            TempData["CartSuccess"] = "Ürün sepetten kaldırıldı.";
 
         return RedirectToAction(nameof(Index));
     }

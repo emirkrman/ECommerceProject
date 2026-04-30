@@ -34,14 +34,14 @@ public class CartService : ICartService
     public async Task<CartOperationResult> AddToCartAsync(int userId, int productId, int quantity)
     {
         if (quantity <= 0)
-            return CartOperationResult.Failure("Adet 1 veya daha buyuk olmalidir.");
+            return CartOperationResult.Failure("Adet 1 veya daha büyük olmalıdır.");
 
         var product = await _productRepository.GetActiveDetailsAsync(productId);
         if (product == null)
-            return CartOperationResult.Failure("Urun bulunamadi.");
+            return CartOperationResult.Failure("Ürün bulunamadı.");
 
         if (product.Stock <= 0)
-            return CartOperationResult.Failure("Bu urun stokta yok.");
+            return CartOperationResult.Failure("Bu ürün stokta yok.");
 
         var cart = await GetOrCreateTrackedCartAsync(userId);
         var cartItem = cart.Items.FirstOrDefault(i => i.ProductId == productId);
@@ -50,7 +50,7 @@ public class CartService : ICartService
 
         var reserved = await _stockReservationService.TryReserveAsync(userId, productId, newQuantity, product.Stock);
         if (!reserved)
-            return CartOperationResult.Failure("Secilen adet urun stok miktarini asiyor.");
+            return CartOperationResult.Failure("Seçilen adet ürün stok miktarını aşıyor.");
 
         if (cartItem == null)
         {
@@ -70,35 +70,35 @@ public class CartService : ICartService
         cart.UpdatedDate = DateTime.UtcNow;
         await SaveChangesOrRestoreReservationAsync(userId, productId, previousQuantity, product.Stock);
 
-        return CartOperationResult.Success("Urun sepete eklendi.");
+        return CartOperationResult.Success("Ürün sepete eklendi.");
     }
 
     public async Task<CartOperationResult> UpdateQuantityAsync(int userId, int productId, int quantity)
     {
         var cart = await _cartRepository.GetTrackedByUserIdAsync(userId);
         if (cart == null)
-            return CartOperationResult.Failure("Sepet urunu bulunamadi.");
+            return CartOperationResult.Failure("Sepet ürünü bulunamadı.");
 
         var cartItem = cart.Items.FirstOrDefault(i => i.ProductId == productId);
         if (cartItem == null)
-            return CartOperationResult.Failure("Sepet urunu bulunamadi.");
+            return CartOperationResult.Failure("Sepet ürünü bulunamadı.");
 
         if (quantity <= 0)
         {
             RemoveCartItemOrCart(cart, cartItem);
             await _unitOfWork.SaveChangesAsync();
             await _stockReservationService.ReleaseAsync(userId, productId);
-            return CartOperationResult.Success("Urun sepetten kaldirildi.");
+            return CartOperationResult.Success("Ürün sepetten kaldırıldı.");
         }
 
         var product = await _productRepository.GetActiveDetailsAsync(productId);
         if (product == null)
-            return CartOperationResult.Failure("Urun bulunamadi.");
+            return CartOperationResult.Failure("Ürün bulunamadı.");
 
         var previousQuantity = cartItem.Quantity;
         var reserved = await _stockReservationService.TryReserveAsync(userId, productId, quantity, product.Stock);
         if (!reserved)
-            return CartOperationResult.Failure("Secilen adet urun stok miktarini asiyor.");
+            return CartOperationResult.Failure("Seçilen adet ürün stok miktarını aşıyor.");
 
         cartItem.Quantity = quantity;
         cartItem.UpdatedDate = DateTime.UtcNow;
@@ -106,7 +106,7 @@ public class CartService : ICartService
 
         await SaveChangesOrRestoreReservationAsync(userId, productId, previousQuantity, product.Stock);
 
-        return CartOperationResult.Success("Sepet guncellendi.");
+        return CartOperationResult.Success("Sepet güncellendi.");
     }
 
     public async Task<bool> RemoveFromCartAsync(int userId, int productId)

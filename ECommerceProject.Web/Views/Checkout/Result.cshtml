@@ -1,0 +1,37 @@
+@model ECommerceProject.Web.ViewModels.Checkout.CheckoutResultViewModel
+
+@{
+    ViewData["Title"] = Model.Succeeded ? "Ödeme Başarılı" : "Ödeme Başarısız";
+    var alertClass = Model.Succeeded ? "alert-success" : "alert-danger";
+}
+
+<div class="container py-5">
+    <div class="card border-0 shadow-sm mx-auto checkout-result-card">
+        <div class="card-body text-center p-5">
+            <div class="alert @alertClass mb-4">
+                @Model.Message
+            </div>
+
+            @if (Model.OrderId.HasValue)
+            {
+                <p class="text-muted mb-4">Sipariş No: <strong>@Model.OrderId.Value</strong></p>
+            }
+
+            @if (Model.Succeeded)
+            {
+                <a asp-controller="Product" asp-action="List" class="btn btn-dark">Alışverişe Devam Et</a>
+            }
+            else
+            {
+                <a asp-controller="Checkout" asp-action="Index" class="btn btn-dark">Tekrar Dene</a>
+                <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-secondary ms-2">Sepete Dön</a>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .checkout-result-card {
+        max-width: 560px;
+    }
+</style>

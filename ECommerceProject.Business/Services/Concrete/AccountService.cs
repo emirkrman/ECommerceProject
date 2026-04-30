@@ -26,7 +26,7 @@ public class AccountService : IAccountService
 
         if (await _userRepository.EmailExistsAsync(normalizedEmail))
         {
-            return AccountResult.Failure("Bu e-posta adresi zaten kayitli.", nameof(request.Email));
+            return AccountResult.Failure("Bu e-posta adresi zaten kayıtlı.", nameof(request.Email));
         }
 
         var user = new AppUser
@@ -52,13 +52,13 @@ public class AccountService : IAccountService
 
         if (user == null)
         {
-            return AccountResult.Failure("E-posta veya sifre hatali.");
+            return AccountResult.Failure("E-posta veya şifre hatalı.");
         }
 
         var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
         if (verificationResult == PasswordVerificationResult.Failed)
         {
-            return AccountResult.Failure("E-posta veya sifre hatali.");
+            return AccountResult.Failure("E-posta veya şifre hatalı.");
         }
 
         if (verificationResult == PasswordVerificationResult.SuccessRehashNeeded)
