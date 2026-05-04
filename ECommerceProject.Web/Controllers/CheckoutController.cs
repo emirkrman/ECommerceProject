@@ -109,10 +109,6 @@ public class CheckoutController : BaseController
             {
                 Id = card.Id,
                 CardHolderName = card.CardHolderName,
-                CardNumber = card.CardNumber,
-                ExpiryMonth = card.ExpiryMonth,
-                ExpiryYear = card.ExpiryYear,
-                Cvv = card.Cvv,
                 CardLastFour = card.CardLastFour
             }).ToList()
         };

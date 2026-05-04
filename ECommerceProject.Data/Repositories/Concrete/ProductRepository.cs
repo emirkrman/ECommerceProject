@@ -72,16 +72,6 @@ public class ProductRepository : IProductRepository
         return await query.ToListAsync();
     }
 
-    public async Task<List<Product>> GetLatestActiveAsync(int count)
-    {
-        return await _context.Products
-            .AsNoTracking()
-            .Where(p => p.IsActive)
-            .OrderByDescending(p => p.CreatedDate)
-            .Take(count)
-            .ToListAsync();
-    }
-
     public async Task<Product?> GetByIdAsync(int id)
     {
         return await _context.Products.FindAsync(id);

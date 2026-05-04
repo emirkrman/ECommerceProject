@@ -11,6 +11,7 @@ namespace ECommerceProject.Business.Services.Concrete;
 public class ProductService : IProductService
 {
     private const int ProductListPageSize = 8;
+    private const int HomePageSize = 12;
 
     private readonly IProductRepository _productRepository;
     private readonly ICategoryRepository _categoryRepository;
@@ -73,14 +74,33 @@ public class ProductService : IProductService
         };
     }
 
+    public async Task<ProductListResult> GetHomeProductsAsync(int page)
+    {
+        page = Math.Max(page, 1);
+
+        var totalProducts = await _productRepository.CountPublicListAsync(null, null);
+        var totalPages = (int)Math.Ceiling(totalProducts / (double)HomePageSize);
+        if (totalPages > 0)
+            page = Math.Min(page, totalPages);
+
+        var products = await _productRepository.GetPublicListAsync(
+            null,
+            null,
+            "newest",
+            (page - 1) * HomePageSize,
+            HomePageSize);
+
+        return new ProductListResult
+        {
+            Products = products,
+            CurrentPage = page,
+            TotalPages = totalPages
+        };
+    }
+
     public async Task<List<Product>> GetAdminListAsync(string? sort)
     {
         return await _productRepository.GetAdminListAsync(sort);
-    }
-
-    public async Task<List<Product>> GetLatestActiveProductsAsync(int count)
-    {
-        return await _productRepository.GetLatestActiveAsync(count);
     }
 
     public async Task<List<Category>> GetActiveCategoriesAsync()

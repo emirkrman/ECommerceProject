@@ -257,10 +257,6 @@ public class CheckoutService : ICheckoutService
         {
             Id = card.Id,
             CardHolderName = card.CardHolderName,
-            CardNumber = card.CardNumber,
-            ExpiryMonth = card.ExpiryMonth,
-            ExpiryYear = card.ExpiryYear,
-            Cvv = card.Cvv,
             CardLastFour = card.CardLastFour
         };
     }

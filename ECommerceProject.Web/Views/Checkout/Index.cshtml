@@ -204,7 +204,6 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         const savedAddresses = @Html.Raw(JsonSerializer.Serialize(Model.SavedAddresses, jsonOptions));
-        const savedCards = @Html.Raw(JsonSerializer.Serialize(Model.SavedCards, jsonOptions));
 
         const setFieldValue = (field, value) => {
             if (field) {
@@ -255,6 +254,7 @@
 
         const cardSelect = document.querySelector('[data-card-select]');
         const saveCardCheckbox = document.querySelector('[data-save-card]');
+        const newCardFields = document.querySelectorAll('[data-card-holder-name], [data-card-number], [data-card-expiry-month], [data-card-expiry-year], [data-card-cvv]');
         const cardFields = {
             holderName: document.querySelector('[data-card-holder-name]'),
             number: document.querySelector('[data-card-number]'),
@@ -263,29 +263,35 @@
             cvv: document.querySelector('[data-card-cvv]')
         };
 
-        const fillCardFields = () => {
-            const card = savedCards.find((item) => String(item.id) === cardSelect?.value);
+        const updateCardFields = () => {
+            const hasSavedCard = Boolean(cardSelect?.value);
 
-            setFieldValue(cardFields.holderName, card?.cardHolderName);
-            setFieldValue(cardFields.number, formatCardNumber(card?.cardNumber));
-            setFieldValue(cardFields.expiryMonth, card?.expiryMonth);
-            setFieldValue(cardFields.expiryYear, card?.expiryYear);
-            setFieldValue(cardFields.cvv, card?.cvv);
+            if (hasSavedCard) {
+                setFieldValue(cardFields.holderName, '');
+                setFieldValue(cardFields.number, '');
+                setFieldValue(cardFields.expiryMonth, '');
+                setFieldValue(cardFields.expiryYear, '');
+                setFieldValue(cardFields.cvv, '');
+            }
+
+            newCardFields.forEach((field) => {
+                field.disabled = hasSavedCard;
+            });
 
             if (saveCardCheckbox) {
                 saveCardCheckbox.checked = false;
-                saveCardCheckbox.disabled = Boolean(card);
+                saveCardCheckbox.disabled = hasSavedCard;
             }
         };
 
-        cardSelect?.addEventListener('change', fillCardFields);
+        cardSelect?.addEventListener('change', updateCardFields);
 
         if (addressSelect?.value) {
             fillAddressFields();
         }
 
         if (cardSelect?.value) {
-            fillCardFields();
+            updateCardFields();
         }
     </script>
 }

@@ -8,7 +8,4 @@ public class CheckoutSummaryModel
 
     public List<CheckoutCardModel> SavedCards { get; set; } = new();
 
-    public decimal CartTotal => Items.Sum(item => item.Subtotal);
-
-    public bool IsCartEmpty => !Items.Any();
 }

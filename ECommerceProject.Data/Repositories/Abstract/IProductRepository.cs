@@ -14,7 +14,6 @@ public interface IProductRepository
     Task<int> CountPublicListAsync(IReadOnlyCollection<int>? categoryIds, string? search);
     Task<Product?> GetActiveDetailsAsync(int id);
     Task<List<Product>> GetAdminListAsync(string? sort);
-    Task<List<Product>> GetLatestActiveAsync(int count);
     Task<Product?> GetByIdAsync(int id);
     Task<Product?> GetByIdWithCategoryAsync(int id);
     Task AddAsync(Product product);

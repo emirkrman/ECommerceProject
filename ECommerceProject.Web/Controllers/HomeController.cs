@@ -1,6 +1,7 @@
 using ECommerceProject.Business.Services.Abstract;
 using ECommerceProject.Entity.Common;
 using ECommerceProject.Web.ViewModels.Common;
+using ECommerceProject.Web.ViewModels.Home;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -17,9 +18,16 @@ public class HomeController : BaseController
         _productService = productService;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int page = 1)
     {
-        return View(await _productService.GetLatestActiveProductsAsync(12));
+        var result = await _productService.GetHomeProductsAsync(page);
+
+        return View(new HomeIndexViewModel
+        {
+            Products = result.Products,
+            CurrentPage = result.CurrentPage,
+            TotalPages = result.TotalPages
+        });
     }
 
     public IActionResult Privacy()

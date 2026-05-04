@@ -1,52 +1,81 @@
-﻿@model List<ECommerceProject.Entity.Concrete.Product>
+@model ECommerceProject.Web.ViewModels.Home.HomeIndexViewModel
 
 @{
-    ViewData["Title"] = "Home";
-    var products = Model ?? new List<ECommerceProject.Entity.Concrete.Product>();
+    ViewData["Title"] = "Ana Sayfa";
+    var products = Model.Products;
+    const int cardCount = 12;
 }
 
 <div class="container py-4">
-
     <div class="text-center mb-4">
         <h2 class="fw-semibold">Ürünler</h2>
     </div>
 
-    <div class="row g-4">
+    @if (products.Any())
+    {
+        <div class="row g-4">
+            @for (var i = 0; i < cardCount; i++)
+            {
+                var product = i < products.Count ? products[i] : null;
 
-        @for (int i = 0; i < 12; i++)
-        {
-            var product = i < products.Count ? products[i] : null;
-
-            <div class="col-6 col-md-4 col-lg-3">
-
-                @if (product != null)
-                {
-                    <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id"
+                <div class="col-6 col-md-4 col-lg-3">
+                    @if (product != null)
+                    {
+                        <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id"
                            class="text-decoration-none text-dark">
+                            <div class="card h-100 product-card shadow-sm">
+                                <img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "https://placehold.co/600x400?text=Product" : product.ImageUrl)"
+                                     class="card-img-top product-image"
+                                     alt="@product.Name" />
 
-                        <div class="card h-100 product-card shadow-sm">
-                            <img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "https://placehold.co/600x400?text=Product" : product.ImageUrl)"
-                                 class="card-img-top" style="height:180px; object-fit:cover;" />
-
-                            <div class="card-body">
-                                <h6 class="card-title">@product.Name</h6>
-                                <p class="fw-bold mb-0">@product.Price.ToString("C")</p>
+                                <div class="card-body">
+                                    <h6 class="card-title">@product.Name</h6>
+                                    <p class="fw-bold mb-0">@product.Price.ToString("C")</p>
+                                </div>
                             </div>
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="card h-100 empty-card shadow-sm d-flex align-items-center justify-content-center">
+                            <div class="spinner-border text-secondary"></div>
                         </div>
-
-                    </a>
-                }
-                else
-                {
-                    <div class="card h-100 empty-card shadow-sm d-flex align-items-center justify-content-center">
-                        <div class="spinner-border text-secondary"></div>
-                    </div>
-                }
-
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <h5>Ürün bulunamadı</h5>
+                <p class="text-muted mb-0">Şu anda ana sayfada gösterilecek aktif ürün yok.</p>
             </div>
-        }
+        </div>
+    }
 
-    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="mt-4" aria-label="Ana sayfa ürün sayfaları">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(Model.CurrentPage <= 1 ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)">Önceki</a>
+                </li>
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
+                    </li>
+                }
+
+                <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)">Sonraki</a>
+                </li>
+            </ul>
+        </nav>
+    }
 </div>
 
 <style>
@@ -58,6 +87,11 @@
     .product-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1);
+    }
+
+    .product-image {
+        height: 180px;
+        object-fit: cover;
     }
 
     .empty-card {
