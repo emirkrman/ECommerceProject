@@ -1,7 +1,7 @@
 @model ECommerceProject.Web.ViewModels.Checkout.CheckoutResultViewModel
 
 @{
-    ViewData["Title"] = Model.Succeeded ? "Ödeme Başarılı" : "Ödeme Başarısız";
+    ViewData["Title"] = Model.Succeeded ? "Odeme Basarili" : "Odeme Basarisiz";
     var alertClass = Model.Succeeded ? "alert-success" : "alert-danger";
 }
 
@@ -19,7 +19,16 @@
 
             @if (Model.Succeeded)
             {
-                <a asp-controller="Product" asp-action="List" class="btn btn-dark">Alışverişe Devam Et</a>
+                @if (Model.OrderId.HasValue)
+                {
+                    <a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId.Value"
+                       class="btn btn-dark">Sipariş Detayı</a>
+                    <a asp-controller="Product" asp-action="List" class="btn btn-outline-secondary ms-2">Alışverişe Devam Et</a>
+                }
+                else
+                {
+                    <a asp-controller="Product" asp-action="List" class="btn btn-dark">Alışverişe Devam Et</a>
+                }
             }
             else
             {

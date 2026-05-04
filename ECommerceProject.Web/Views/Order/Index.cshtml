@@ -1,0 +1,80 @@
+@model ECommerceProject.Web.ViewModels.Orders.OrderHistoryViewModel
+
+@{
+    ViewData["Title"] = "Siparislerim";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="mb-1">Siparişlerim</h2>
+            <p class="text-muted mb-0">Daha önce verdiğiniz siparişleri buradan takip edebilirsiniz.</p>
+        </div>
+
+        <a asp-controller="Product" asp-action="List" class="btn btn-outline-dark">Alışverişe Devam Et</a>
+    </div>
+
+    @if (Model.Orders.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Sipariş</th>
+                            <th>Tarih</th>
+                            <th>Durum</th>
+                            <th class="text-center">Ürün</th>
+                            <th class="text-end">Toplam</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Orders)
+                        {
+                            var status = GetStatusInfo(order.Status);
+
+                            <tr>
+                                <td class="fw-semibold">#@order.Id</td>
+                                <td>@order.CreatedDate.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>
+                                    <span class="badge text-bg-@status.BadgeClass">@status.Text</span>
+                                </td>
+                                <td class="text-center">@order.ItemCount</td>
+                                <td class="text-end fw-semibold">@order.TotalAmount.ToString("C")</td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@order.Id"
+                                       class="btn btn-outline-dark btn-sm">
+                                        Detay
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <h5>Henüz siparişiniz yok</h5>
+                <p class="text-muted">Ürünleri inceleyip ilk siparişinizi oluşturabilirsiniz.</p>
+                <a asp-controller="Product" asp-action="List" class="btn btn-dark">Ürünlere Git</a>
+            </div>
+        </div>
+    }
+</div>
+
+@functions {
+    private static (string Text, string BadgeClass) GetStatusInfo(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.PaymentSucceeded => ("Ödeme Başarılı", "success"),
+            OrderStatus.PaymentFailed => ("Ödeme Başarısız", "danger"),
+            _ => ("Beklemede", "secondary")
+        };
+    }
+}

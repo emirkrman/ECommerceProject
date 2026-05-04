@@ -57,6 +57,10 @@
                                 }
 
                                 <li>
+                                    <a class="dropdown-item" asp-controller="Order" asp-action="Index">Siparişlerim</a>
+                                </li>
+
+                                <li>
                                     <form asp-controller="Account" asp-action="Logout" method="post">
                                         @Html.AntiForgeryToken()
                                         <button type="submit" class="dropdown-item">&#199;&#305;k&#305;&#351;</button>
